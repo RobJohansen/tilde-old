@@ -1,0 +1,40 @@
+<html>
+  <head>
+    <title>Tilde</title>
+    
+    <link rel="stylesheet" type="text/css" href="stylesheets/timeline.css">
+    <script type="text/javascript" src="scripts/timeline.js"></script>
+
+    <script src="https://www.google.com/jsapi" type="text/javascript"></script>
+
+    <script type="text/javascript">
+
+    </script>
+
+    <style type="text/css">
+      
+    </style>
+  </head>
+
+  <body>
+    <form name="search" method="post">
+      <span class="wrapper">
+        <input
+          name="terms"
+          type="textbox"
+          value="{{ s }}"
+          onkeydown="return checkTerms(this, event)" />
+
+        <img src="images/favicon.ico" />
+
+        <input
+          name="tilds"
+          type="textbox"
+          value="{{ t }}"
+          onkeydown="return checkTilds(this, event)" />
+      </span>
+
+      <input class="button" type="submit" />
+    </form>
+  </body>
+</html>

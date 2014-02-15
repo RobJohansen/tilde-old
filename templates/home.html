@@ -1,0 +1,115 @@
+<html>
+  <head>
+    <title>Tilde</title>
+    
+    <link rel="stylesheet" type="text/css" href="stylesheets/timeline.css">
+    <script type="text/javascript" src="scripts/timeline.js"></script>
+
+    <script src="https://www.google.com/jsapi" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        function checkTerms(c, e) {
+          if (e.keyCode == 222) {
+            document.forms['search'].tilds.focus();
+            return false;
+          }
+        }
+
+        function checkTilds(c, e) {
+          if (e.keyCode == 8 && c.value == '') {
+            document.forms['search'].terms.focus();
+          }
+        }
+    </script>
+
+
+
+    <script type="text/javascript">
+        google.load('visualization', '1');
+
+        var options = {
+          'width'   : '100%'
+        };
+
+        var onselect = function (event) {
+
+        };
+
+        function redraw() {
+          var timeline = new links.Timeline(document.getElementById('mytimeline'));
+          var data = new google.visualization.DataTable({{ data|safe }}, 0.6);
+
+          timeline.draw(data, options);
+          
+          google.visualization.events.addListener(timeline, 'select', onselect);
+        }
+
+        window.onresize = redraw;
+        window.onload = redraw;
+
+
+    </script>
+
+    <style type="text/css">
+      body {
+        font: 0.8em Calibri, Sans-Serif;
+        margin: 0px;
+      }
+
+      .wrapper {
+        border: 1px solid lightgray;
+        margin: 1px;
+        padding: 5px;
+        font-size: 1.6em;
+      }
+
+      .wrapper input {
+        border: none;
+        background-color: transparent;
+        font-size: inherit;
+      }
+
+      *:focus {
+        outline: 0;
+      }
+
+      .button {
+        padding: 9px;
+      }
+
+      .current {
+        background-color: beige !important;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="mytimeline"></div>
+
+    <br/>
+
+    <center>
+      <form name="search" method="post">
+        <span class="wrapper">
+          <input
+            name="terms"
+            type="textbox"
+            value="{{ s }}"
+            onkeydown="return checkTerms(this, event)" />
+
+          <img src="images/favicon.ico" />
+
+          <input
+            name="tilds"
+            type="textbox"
+            value="{{ t }}"
+            onkeydown="return checkTilds(this, event)" />
+        </span>
+
+        <input class="button" type="submit" />
+      </form>
+
+      <a href="results?n={{ n.key() }}&s={{ s }}">Go</a>
+    </center>
+  </body>
+</html>

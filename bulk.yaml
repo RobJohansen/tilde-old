@@ -1,0 +1,23 @@
+python_preamble:
+- import: models
+- import: google.appengine.ext.bulkload.transform
+- import: google.appengine.api.datastore
+
+transformers:
+- model: models.Tilde
+  connector: csv
+  connector_options:
+    encoding: utf-8
+    columns: from_header
+  property_map:
+    - property: ancestor
+      external_name: Ancestor
+      import_transform: transform.create_foreign_key('Tilde')
+    - property: tag
+      external_name: Tag
+    - property: start
+      external_name: Start
+      import_transform: transform.import_date_time('%d/%m/%Y')
+    - property: end
+      external_name: End
+      import_transform: transform.import_date_time('%d/%m/%Y')

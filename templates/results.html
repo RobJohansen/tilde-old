@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <title>Tilde</title>
+  </head>
+
+  <body>
+    {% for r in results %}
+      <a href='http://en.wikipedia.org/w/index.php?title={{ r.text }}&oldid={{ r.id }}'>
+        <div>
+          {{ r.text }}
+        </div>
+      </a>
+    {% endfor %}
+  </body>
+</html>
