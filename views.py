@@ -12,7 +12,7 @@ import jinja2
 import os
 
 import urllib2
-import json as j
+import json
 
 
 import logging
@@ -48,6 +48,12 @@ def make_query(s, e, q):
 J_ENV = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
 
+
+def json_response(self, context):
+    self.response.headers['Content-Type'] = 'application/json'
+    self.response.out.write(json.dumps(context))
+
+
 def render_with_context(self, filename, context):
     context.update({})
 
@@ -69,7 +75,7 @@ def derive_tilde(terms):
     # # Find Root Node
     # rs = map(models.Tilde.get_by_key_name, cs)
 
-    # leaves = []
+    leaves = []
 
 
     # ys = map(models.Tilde.get_by_key_name, xs)
@@ -85,7 +91,7 @@ def derive_tilde(terms):
 
 
     for w in terms.split(' '):
-        n = models.Tilde.get_by_key_name(w) or leaves.append(m)
+        n = models.Tilde.get_by_id(w) or leaves.append(m)
 
         # Multiple should be a 'did you mean' list
         # but only if more than one has tags matching the label
@@ -108,7 +114,84 @@ def derive_tilde(terms):
 
 
 
+class Load(RequestHandler):
+    def get(self):
+        terms = self.request.get('ts')
 
+        ## DERIVE TILDE ##
+        # n = derive_tilde(terms)
+
+        ## GET DATA ##
+        c = models.Tilde.get_by_id('Lost')
+
+        import gviz_api
+
+        table = gviz_api.DataTable({
+            'start'     : ('date', 'Start'),
+            'end'       : ('date', 'End'),
+            'content'   : ('string', 'Content'),
+            'group'     : ('string', 'Group'),
+            'className' : ('string', 'Class')
+        })
+
+        ds = []
+
+        nodes = [c] + list(c.children)
+
+        if c.ancestor:
+            nodes.append([c.ancestor.get()] + list(c.ancestor.get().children))
+
+        for x in nodes:
+            tild = {}
+
+            if x == None:
+                pass
+                # tild['group'] = 'All Time'
+
+                # url = '<a href="?s={s}">{text}</a>'.format(
+                #     s = s,
+                #     text = 'All Time'
+                # )
+
+                # tild.update({
+                #     'start'     : c.start - timedelta(days=100),
+                #     'end'       : c.end + timedelta(days=100),
+                #     'content'   : url
+                # })
+
+            else:
+                tild['group'] = x.verbose()
+
+                text = x.verbose(tag = x.tag, key = x.key.id())
+
+                if x == c:
+                    tild['className'] = 'current'
+
+                    url = text
+
+                else:
+                    url = text
+                    # url = '<a href="?s={s}&t={t}&n={n}">{text}</a>'.format(
+                    #     s = s,
+                    #     t = text,
+                    #     n = str(x.key),
+                    #     text = text
+                    # )
+
+                tild.update({
+                    'start'     : x.start,
+                    'content'   : url
+                })
+
+                if not x.end == x.start:
+                    tild['end'] = x.end + timedelta(days=1)
+            
+            ds.append(tild)
+
+        table.LoadData(sorted(ds, key=itemgetter('start')))
+        ds = table.ToJSon()
+
+        json_response(self, {'data' : ds })
 
 
 
@@ -118,87 +201,103 @@ class Home(RequestHandler):
         t = self.request.get('t')
         n = self.request.get('n')
 
-        try:
-            c = models.Tilde.get(n) or None
+        # if n:
+        #     c = models.Tilde.get_by_id(n)
 
-            import gviz_api
 
-            table = gviz_api.DataTable({
-                'start'     : ('date', 'Start'),
-                'end'       : ('date', 'End'),
-                'content'   : ('string', 'Content'),
-                'group'     : ('string', 'Group'),
-                'className' : ('string', 'Class')
-            })
-            ds = []
 
-            for x in [c.ancestor, c] + list(c.children) + (list(c.ancestor.children) if c.ancestor else []):
-                tild = {}
+        # try:
+        #     import gviz_api
 
-                if x == None:
-                    tild['group'] = 'All Time'
+        #     table = gviz_api.DataTable({
+        #         'start'     : ('date', 'Start'),
+        #         'end'       : ('date', 'End'),
+        #         'content'   : ('string', 'Content'),
+        #         'group'     : ('string', 'Group'),
+        #         'className' : ('string', 'Class')
+        #     })
 
-                    url = '<a href="?s={s}">{text}</a>'.format(
-                        s = s,
-                        text = 'All Time'
-                    )
+        #     ds = []
 
-                    tild.update({
-                        'start'     : c.start - timedelta(days=100),
-                        'end'       : c.end + timedelta(days=100),
-                        'content'   : url
-                    })
 
-                else:
-                    tild['group'] = x.verbose()
+        #     nodes = [c] + list(c.children)
 
-                    text = x.verbose(tag = x.tag, key = x.key().id_or_name())
+        #     if c.ancestor:
+        #         nodes.append([c.ancestor.get()] + list(c.ancestor.get().children))
 
-                    if x == c:
-                        tild['className'] = 'current'
 
-                        url = text
 
-                    else:
-                        url = '<a href="?s={s}&t={t}&n={n}">{text}</a>'.format(
-                            s = s,
-                            t = text,
-                            n = str(x.key()),
-                            text = text
-                        )
+        #     for x in nodes:
+        #         tild = {}
 
-                    tild.update({
-                        'start'     : x.start,
-                        'content'   : url
-                    })
+        #         if x == None:
+        #             pass
+        #             # tild['group'] = 'All Time'
 
-                    if not x.end == x.start:
-                        tild['end'] = x.end + timedelta(days=1)
+        #             # url = '<a href="?s={s}">{text}</a>'.format(
+        #             #     s = s,
+        #             #     text = 'All Time'
+        #             # )
+
+        #             # tild.update({
+        #             #     'start'     : c.start - timedelta(days=100),
+        #             #     'end'       : c.end + timedelta(days=100),
+        #             #     'content'   : url
+        #             # })
+
+        #         else:
+        #             tild['group'] = x.verbose()
+
+        #             text = x.verbose(tag = x.tag, key = x.key.id())
+
+        #             if x == c:
+        #                 tild['className'] = 'current'
+
+        #                 url = text
+
+        #             else:
+        #                 url = '<a href="?s={s}&t={t}&n={n}">{text}</a>'.format(
+        #                     s = s,
+        #                     t = text,
+        #                     n = str(x.key),
+        #                     text = text
+        #                 )
+
+        #             tild.update({
+        #                 'start'     : x.start,
+        #                 'content'   : url
+        #             })
+
+        #             if not x.end == x.start:
+        #                 tild['end'] = x.end + timedelta(days=1)
                 
-                ds.append(tild)
+        #         ds.append(tild)
 
+        #     table.LoadData(sorted(ds, key=itemgetter('start')))
+        #     ds = table.ToJSon()
 
+        # except datastore_errors.BadKeyError:
+        #     pass
+        #     # uri = '{uri}?s={s}'.format(
+        #     #     s = s,
+        #     #     uri = self.request.uri.partition('?')[0]
+        #     # )
 
-            table.LoadData(sorted(ds, key=itemgetter('start')))
-            ds = table.ToJSon()
+        #     # self.redirect(str(uri))
 
-        except datastore_errors.BadKeyError:
-            uri = '{uri}?s={s}'.format(
-                s = s,
-                uri = self.request.uri.partition('?')[0]
-            )
+        # finally:
+        #     # context = {
+        #     #     's'         : s,
+        #     #     't'         : t,
+        #     #     'n'         : c,
+        #     #     'data'      : ds
+        #     # }
 
-            self.redirect(str(uri))
+        #     context = { 'data': ds }
 
-        finally:
-            context = {
-                's'         : s,
-                't'         : t,
-                'n'         : c,
-                'data'      : ds
-            }
+        context = { }
 
-            render_with_context(self, 'home.html', context)
+        render_with_context(self, 'home.html', context)
         
 
     def post(self):

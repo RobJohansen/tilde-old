@@ -3,23 +3,59 @@
 	{
 		"selected_items":
 		[
+			[
+				"backgr",
+				"background-color"
+			],
+			[
+				"border",
+				"border-left"
+			],
+			[
+				"font-",
+				"font-weight"
+			]
 		]
 	},
 	"buffers":
 	[
 		{
-			"file": "app.yaml",
+			"file": "templates/home.html",
 			"settings":
 			{
-				"buffer_size": 437,
+				"buffer_size": 1594,
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "index.yaml",
+			"file": "scripts/main.js",
 			"settings":
 			{
-				"buffer_size": 1006,
+				"buffer_size": 1090,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "models.py",
+			"settings":
+			{
+				"buffer_size": 1636,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "views.py",
+			"settings":
+			{
+				"buffer_size": 15386,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "urls.py",
+			"settings":
+			{
+				"buffer_size": 444,
 				"line_ending": "Windows"
 			}
 		}
@@ -27,11 +63,11 @@
 	"build_system": "",
 	"command_palette":
 	{
-		"height": 0.0,
+		"height": 392.0,
 		"selected_items":
 		[
 		],
-		"width": 0.0
+		"width": 392.0
 	},
 	"console":
 	{
@@ -51,14 +87,16 @@
 	},
 	"file_history":
 	[
+		"/C/Users/Rob/SkyDrive/Documents/Projects/Web/Tilde/stylesheets/main.css",
+		"/C/Users/Rob/SkyDrive/Documents/Projects/Web/Tilde/scripts/main.js",
 		"/C/Users/Rob/SkyDrive/Documents/Projects/Web/Tilde/app.yaml",
+		"/C/Users/Rob/SkyDrive/Documents/Projects/Web/Tilde/templates/home.html",
 		"/C/Users/Rob/SkyDrive/Documents/Projects/Web/Tilde/views.py",
 		"/C/Users/Rob/SkyDrive/Documents/Projects/Web/Tilde/templates/results.html",
 		"/C/Users/Rob/SkyDrive/Documents/Projects/Web/Tilde/templates/test.html",
 		"/C/Users/Rob/SkyDrive/Documents/Projects/Web/Tilde/models.py",
 		"/C/Users/Rob/SkyDrive/Documents/Projects/Web/Tilde/urls.py",
-		"/C/Users/Rob/SkyDrive/Documents/University/Year 4/G54CCS/Coursework/myapp/views.py",
-		"/C/Users/Rob/SkyDrive/Documents/Projects/Web/Tilde/templates/home.html"
+		"/C/Users/Rob/SkyDrive/Documents/University/Year 4/G54CCS/Coursework/myapp/views.py"
 	],
 	"find":
 	{
@@ -94,65 +132,157 @@
 	"groups":
 	[
 		{
-			"selected": 1,
+			"selected": 3,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "app.yaml",
+					"file": "templates/home.html",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 437,
+						"buffer_size": 1594,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								174,
-								174
+								1025,
+								1025
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/YAML/YAML.tmLanguage"
+							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 90.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 1,
+					"stack_index": 4,
 					"type": "text"
 				},
 				{
 					"buffer": 1,
-					"file": "index.yaml",
-					"semi_transient": true,
+					"file": "scripts/main.js",
+					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 1006,
+						"buffer_size": 1090,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								829,
-								829
+								604,
+								604
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/YAML/YAML.tmLanguage",
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
 							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": -0.0,
+						"translation.y": 135.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "models.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1636,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								842,
+								842
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 214.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "views.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 15386,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2269,
+								2269
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 259.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "urls.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 444,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								333,
+								333
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
+					"stack_index": 1,
 					"type": "text"
 				}
 			]

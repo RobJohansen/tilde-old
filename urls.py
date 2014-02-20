@@ -21,9 +21,9 @@ urls = [
     ),
 
     Route(
-        r'/test',
-        handler=v.Test,
-        name='Test'
+        r'/load',
+        handler=v.Load,
+        name='Load'
     )
 ]
 

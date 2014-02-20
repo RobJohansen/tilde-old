@@ -6,26 +6,32 @@ threadsafe: yes
 
 
 handlers:
+- url: /admin/.*
+  script: google.appengine.ext.admin.application
+  login: admin
+
 - url: /favicon\.ico
   static_files: images/favicon.ico
   upload: favicon\.ico
 
-- url: /images
-  static_dir: images
-
-- url: /stylesheets
+- url: /styles
   static_dir: stylesheets
 
 - url: /scripts
   static_dir: scripts
 
+- url: /images/(.*\.(gif|png|jpg|ico))
+  static_files: images/\1
+  upload: images/(.*\.(gif|png|jpg|ico))
+
 - url: .*
+  login: required
   script: urls.app
 
 
 libraries:
 - name: webapp2
-  version: "2.5.1"
+  version: "2.5.2"
 
 - name: jinja2
   version: "2.6"
