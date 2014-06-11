@@ -1,0 +1,72 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+
+    <title>Tilde</title>
+
+    <!-- jQuery -->
+    <script type="text/javascript" src="js/jquery-1.9.1.js"></script>
+    <script type="text/javascript" src="js/jquery-ui.js"></script>
+
+    <!-- Timeline -->
+    <link rel="stylesheet" type="text/css" href="css/timeline.css">
+    <script type="text/javascript" src="js/timeline.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
+    <!-- Font-Awesome -->
+    <link rel="stylesheet" type="text/css" href="css/font-awesome/css/font-awesome.min.css">
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-theme.min.css">
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+
+    <!-- Bootstrap Addons -->
+    <script type="text/javascript" src="js/bootbox.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.typeahead.js"></script>
+
+    <!-- Main -->
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script type="text/javascript" src="js/main.js"></script>
+  </head>
+
+  <body>
+    <div id="timeline"></div>
+
+
+    <div id="search"  class="drop-shadow">
+      <input id="terms" type="text" class="form-control" autocomplete="off" />
+
+<!--       {% for t in tilds %}
+        <span class="tild added">
+          <span class="tilde">~</span>
+          <i class="fa fa-times hide"></i>
+          {{ t }}
+        </span>
+      {% endfor %} -->
+      
+      <span id="tildes" class="appender">
+        <span class="tilde">~</span>
+
+        <input id="tilds" type="text" class="form-control" autocomplete="off" />
+
+        <i class="fa fetching-tilds fa-refresh fa-spin"></i>
+      </span>
+    </div>
+
+
+
+
+
+    <div style="position: absolute;">
+
+
+        <i class="fa fetching-terms"></i>
+        <div id="results"></div>
+
+    </div>
+
+    <!-- <iframe src="http://en.wikipedia.org" style="width: 100%; border: none; height:100%; padding: 100px"></iframe> -->
+
+  </body>
+</html>

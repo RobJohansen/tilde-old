@@ -1,0 +1,9 @@
+{% for r in results %}
+  <div>
+  	<a class="simple-result" href='#' tag='{{ r.url }}'>
+			{{ r.name }}
+	  </a>
+  </div>	
+{% else %}
+  No Results.
+{% endfor %}

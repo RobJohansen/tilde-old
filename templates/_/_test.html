@@ -1,0 +1,40 @@
+{% macro form_dropdown(name, values, default) -%}
+  <select name="{{ name }}">
+    {% for v in values %}
+      <option value="{{ v.value }}" {% if v.value == default|string %}selected{% endif %}>
+        {{ v.text }}
+      </option>
+    {% endfor %}
+  </select>
+{%- endmacro %}
+
+<html>
+  <head>
+    <title>Tilde</title>
+
+    <script type="text/javascript">
+
+    </script>
+
+    <style type="text/css">
+      
+    </style>
+  </head>
+
+  <body>
+    <form name="search" method="post">
+      <span class="wrapper">
+        <input
+          name="terms"
+          type="textbox"
+          value="{{ q }}" />
+
+        {{ form_dropdown('tilds', data.tilds, t) }}
+      </span>
+
+      <input class="button" type="submit" />
+    </form>
+
+    {{ t }}
+  </body>
+</html>

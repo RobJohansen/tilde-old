@@ -12,6 +12,16 @@ indexes:
 
 - kind: Tilde
   properties:
+  - name: ancestor
+  - name: tag
+
+- kind: Tilde
+  properties:
+  - name: label
+  - name: tag
+
+- kind: Tilde
+  properties:
   - name: parent=
   - name: start
 

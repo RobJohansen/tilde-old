@@ -1,0 +1,26 @@
+/* GLOBAL */
+body {
+  margin: 0px;
+  overflow:           hidden;
+}
+
+input[type=text]::-ms-clear {
+  display: none;
+}
+
+*:hover,
+*:active,
+*:focus {
+  outline:            0 !important;
+  -webkit-appearance: none;
+}
+
+.drop-shadow {
+  box-shadow: 0 0 10px 1px rgba(0, 0, 0, .5);
+  -webkit-box-shadow: 0 0 10px 1px rgba(0, 0, 0, .5);
+}
+
+.drop-shadow-no-left {
+  -webkit-box-shadow: 5px 0 10px 1px rgba(0, 0, 0, .5);
+  box-shadow: 8px 0 10px 1px rgba(0, 0, 0, .5);
+}

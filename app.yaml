@@ -11,18 +11,18 @@ handlers:
   login: admin
 
 - url: /favicon\.ico
-  static_files: images/favicon.ico
+  static_files: img/favicon.ico
   upload: favicon\.ico
 
-- url: /styles
-  static_dir: stylesheets
+- url: /css
+  static_dir: css
 
-- url: /scripts
-  static_dir: scripts
+- url: /js
+  static_dir: js
 
-- url: /images/(.*\.(gif|png|jpg|ico))
-  static_files: images/\1
-  upload: images/(.*\.(gif|png|jpg|ico))
+- url: /img/(.*\.(gif|png|jpg|ico))
+  static_files: img/\1
+  upload: img/(.*\.(gif|png|jpg|ico))
 
 - url: .*
   login: required

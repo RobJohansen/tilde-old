@@ -1,50 +1,27 @@
-from google.appengine.ext import db
 from google.appengine.api import users, datastore_errors
 
-from datetime import datetime, timedelta, date
-from calendar import Calendar, monthrange
 from webapp2 import RequestHandler, uri_for
 
-import urllib
-import models
+from datetime import datetime, timedelta, date
+
+
 
 import jinja2
 import os
-
-import urllib2
 import json
-
 
 import logging
 
-from itertools import chain as xn, combinations as cmb
 from operator import itemgetter
 
 
+import models
+import pages
 
 
-G_KEY = 'AIzaSyCjOYChDxIkvg0rPsu7PH3WZ103HRU7rFk'
-
-G_CSE = '016459373861639011207:s6x5jgsujyo'
-
-G_QRY = 'https://www.googleapis.com/customsearch/v1?' + \
-            'key={key}&' + \
-            'cx={cse}&' + \
-            'q={qry}&' + \
-            'alt=json&' + \
-            'siteSearch=en.wikipedia.org'
-
-            #'sort=date:r:{dts}:{dte}&' + \
-
-def make_query(s, e, q):
-    return G_QRY.format(
-        key = G_KEY,
-        cse = G_CSE,
-        dts = s.strftime('%Y%m%d'),
-        dte = e.strftime('%Y%m%d'),
-        qry = q
-    )
-
+#############
+# RENDERERS #
+#############
 J_ENV = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
 
@@ -61,72 +38,77 @@ def render_with_context(self, filename, context):
     self.response.out.write(template.render(context))
 
 
-
-def combs(xs):
-    return map(' '.join, chain(*map(lambda i: combinations(xs, i), range(1, len(xs) + 1))))
-
-
-def derive_tilde(terms):
-# Initialize Site object
-
-    # ts = terms.split(' ')
-    # cs = combs(xs)
-
-    # # Find Root Node
-    # rs = map(models.Tilde.get_by_key_name, cs)
-
-    leaves = []
-
-
-    # ys = map(models.Tilde.get_by_key_name, xs)
-
-    # if any(ys):
-
-    # else:
-
-
-    # try:
-    #     x = xs[next(i for i, j in enumerate(ys) if j)]
-
-
-
-    for w in terms.split(' '):
-        n = models.Tilde.get_by_id(w) or leaves.append(m)
-
-        # Multiple should be a 'did you mean' list
-        # but only if more than one has tags matching the label
-
-
-
-
-    ms = [n]
-
-    for tag in n.label.tag:
-        if len(ms) > 0:
-            for m in ms:
-                if tag.format(tag = m.tag, key = n.key().id_or_name()) in cs:
-                    n = m
-                    break
-
-            ms = sum([list(m.children) for m in ms], [])
-
-    return n
-
-
-
-class Load(RequestHandler):
+#########
+# VIEWS #
+#########
+class Home(RequestHandler):
     def get(self):
-        terms = self.request.get('ts')
+        context = {
+            'tilds'     : self.request.get('ts')
+        }
 
-        ## DERIVE TILDE ##
-        # n = derive_tilde(terms)
+        render_with_context(self, 'home.html', context)
 
-        ## GET DATA ##
-        c = models.Tilde.get_by_id('Lost')
 
-        import gviz_api
+class Results(RequestHandler):
+    def get(self, query, tilds):
+        timestamp = models.get_timestamp(tilds)
+        context = pages.search_wiki(query, timestamp)
 
-        table = gviz_api.DataTable({
+        json_response(self, context)
+
+
+class Tilds(RequestHandler):
+    def get(self, tilds):
+        context = models.get_next_tilds(tilds)
+
+        json_response(self, context)
+
+
+class Page(RequestHandler):
+    def get(self, page, timestamp):
+        t = pages.fetch_wiki(page, timestamp)
+
+        self.response.out.write(t)
+
+
+class Timeline(RequestHandler):
+    def get(self, tilds):
+        n = models.get_current_tild(tilds)
+
+        # Populate
+        results = []
+
+        context = { }
+
+        if n:
+            results = [n] + list(n.children())
+
+            if n.ancestor:
+                results.append(n.ancestor.get())
+                results.extend(n.ancestor.get().children())
+
+            diff = (n.end - n.start) / 10
+
+            def _to_json_date(d):
+                return d.strftime("%Y-%m-%d")
+
+            context.update({
+                'min'       : _to_json_date(n.start - diff),
+                'max'       : _to_json_date(n.end + diff),
+                'custom'    : _to_json_date(n.end) #.seen_date('Lost'))
+            })
+
+        else:
+            results = []
+
+        results = zip(results, [True] + [False] * (len(results) - 1))
+        results = sorted(map(lambda (x, b): x.to_calendar_node(b), results), key=itemgetter('start'))
+
+        # Build
+        from gviz_api import DataTable
+
+        table = DataTable({
             'start'     : ('date', 'Start'),
             'end'       : ('date', 'End'),
             'content'   : ('string', 'Content'),
@@ -134,505 +116,262 @@ class Load(RequestHandler):
             'className' : ('string', 'Class')
         })
 
-        ds = []
-
-        nodes = [c] + list(c.children)
-
-        if c.ancestor:
-            nodes.append([c.ancestor.get()] + list(c.ancestor.get().children))
-
-        for x in nodes:
-            tild = {}
-
-            if x == None:
-                pass
-                # tild['group'] = 'All Time'
-
-                # url = '<a href="?s={s}">{text}</a>'.format(
-                #     s = s,
-                #     text = 'All Time'
-                # )
-
-                # tild.update({
-                #     'start'     : c.start - timedelta(days=100),
-                #     'end'       : c.end + timedelta(days=100),
-                #     'content'   : url
-                # })
-
-            else:
-                tild['group'] = x.verbose()
-
-                text = x.verbose(tag = x.tag, key = x.key.id())
-
-                if x == c:
-                    tild['className'] = 'current'
-
-                    url = text
-
-                else:
-                    url = text
-                    # url = '<a href="?s={s}&t={t}&n={n}">{text}</a>'.format(
-                    #     s = s,
-                    #     t = text,
-                    #     n = str(x.key),
-                    #     text = text
-                    # )
-
-                tild.update({
-                    'start'     : x.start,
-                    'content'   : url
-                })
-
-                if not x.end == x.start:
-                    tild['end'] = x.end + timedelta(days=1)
-            
-            ds.append(tild)
-
-        table.LoadData(sorted(ds, key=itemgetter('start')))
-        ds = table.ToJSon()
-
-        json_response(self, {'data' : ds })
+        table.LoadData(results)
 
 
+        context.update({
+            'data'      : table.ToJSon(),
+        })
 
-class Home(RequestHandler):
-    def get(self):
-        s = self.request.get('s')
-        t = self.request.get('t')
-        n = self.request.get('n')
-
-        # if n:
-        #     c = models.Tilde.get_by_id(n)
+        # Render
+        json_response(self, context)
 
 
-
-        # try:
-        #     import gviz_api
-
-        #     table = gviz_api.DataTable({
-        #         'start'     : ('date', 'Start'),
-        #         'end'       : ('date', 'End'),
-        #         'content'   : ('string', 'Content'),
-        #         'group'     : ('string', 'Group'),
-        #         'className' : ('string', 'Class')
-        #     })
-
-        #     ds = []
-
-
-        #     nodes = [c] + list(c.children)
-
-        #     if c.ancestor:
-        #         nodes.append([c.ancestor.get()] + list(c.ancestor.get().children))
-
-
-
-        #     for x in nodes:
-        #         tild = {}
-
-        #         if x == None:
-        #             pass
-        #             # tild['group'] = 'All Time'
-
-        #             # url = '<a href="?s={s}">{text}</a>'.format(
-        #             #     s = s,
-        #             #     text = 'All Time'
-        #             # )
-
-        #             # tild.update({
-        #             #     'start'     : c.start - timedelta(days=100),
-        #             #     'end'       : c.end + timedelta(days=100),
-        #             #     'content'   : url
-        #             # })
-
-        #         else:
-        #             tild['group'] = x.verbose()
-
-        #             text = x.verbose(tag = x.tag, key = x.key.id())
-
-        #             if x == c:
-        #                 tild['className'] = 'current'
-
-        #                 url = text
-
-        #             else:
-        #                 url = '<a href="?s={s}&t={t}&n={n}">{text}</a>'.format(
-        #                     s = s,
-        #                     t = text,
-        #                     n = str(x.key),
-        #                     text = text
-        #                 )
-
-        #             tild.update({
-        #                 'start'     : x.start,
-        #                 'content'   : url
-        #             })
-
-        #             if not x.end == x.start:
-        #                 tild['end'] = x.end + timedelta(days=1)
-                
-        #         ds.append(tild)
-
-        #     table.LoadData(sorted(ds, key=itemgetter('start')))
-        #     ds = table.ToJSon()
-
-        # except datastore_errors.BadKeyError:
-        #     pass
-        #     # uri = '{uri}?s={s}'.format(
-        #     #     s = s,
-        #     #     uri = self.request.uri.partition('?')[0]
-        #     # )
-
-        #     # self.redirect(str(uri))
-
-        # finally:
-        #     # context = {
-        #     #     's'         : s,
-        #     #     't'         : t,
-        #     #     'n'         : c,
-        #     #     'data'      : ds
-        #     # }
-
-        #     context = { 'data': ds }
-
-        context = { }
-
-        render_with_context(self, 'home.html', context)
-        
-
-    def post(self):
-        s = self.request.get('terms')
-        t = self.request.get('tilds')
-
-        logging.getLogger().setLevel(logging.DEBUG)
-
-        n = derive_tilde(t)
-
-        uri = '{uri}?s={s}&t={t}&n={n}'.format(
-            uri = self.request.uri.partition('?')[0],
-            n = str(n.key()),
-            s = s,
-            t = t
-        )
-
-        self.redirect(str(uri))
-
-
-
-class Results(RequestHandler):
-    def get(self):
-        n = models.Tilde.get(self.request.get('n'))
-
-        rs = []
-
-        dat = urllib2.urlopen(make_query(n.start, n.end, self.request.get('s')))
-        dat = j.load(dat)['items']
-        dat = map(lambda d: d['formattedUrl'].split('/wiki/')[1], dat)
-
-        for d in dat:
-            url = 'http://en.wikipedia.org/w/index.php?title={text}&action=history&year={year}&month={month}'.format(
-                text = d,
-                year = str(n.end.year),
-                month = str(n.end.month)
-            )
-
-            hdr = {'User-Agent': 'Mozilla/5.0'}
-            req = urllib2.Request(url, headers=hdr)
-            page = urllib2.urlopen(req)
-
-            for line in page.readlines():
-                if 'id="mw-diff-' in line:
-                    rs.append({'text' : d, 'id' : line.split('id="mw-diff-')[1][:12].split('"')[0] })
-                    break
-
+class Derive(RequestHandler):
+    def get(self, id):
         context = {
-            'results'   : rs
+            'tilds'     : models.derive_tilds(id)
         }
 
-        # //     'min'     : {{ 'new Date(%s, 1, 1)'|format(n.start.year)|safe }},
-        # //     'max'     : {{ 'new Date(%s, 1, 1)'|format(n.end.year + 1)|safe }},
-        # //     'zoomMin' : 3600000 * 24,
-        # //     'zoomMax' : 3600000 * 24 * 31 * 12 * 10
-        # // };
-
-        render_with_context(self, 'results.html', context)
+        json_response(self, context)
 
 
+class SeenTag(RequestHandler):
+    def post(self, id):
+        m = models.Tilde.get_by_id(id) or models.Tilde.get_by_id(long(id))
+
+        d = m.end
+
+        while m.ancestor:
+            m = m.ancestor.get()
+
+        models.process_completion(m.key.id(), d)
+
+
+class SeenTime(RequestHandler):
+    def post(self, id, year, month, day):
+        d = datetime(long(year), long(month), long(day))
+
+        models.process_completion(id.split('~')[1], d)
 
 
 class Test(RequestHandler):
     def get(self):
-        
-
-        render_with_context(self, 'results.html', context)
+        self.response.write(models.seen_date('Lost'))
 
 
 
-class DoStuff(RequestHandler):
-    def get(self):
-        x = models.Typde(key_name='Show')
-        x.tag = ['{key}', 'Season {tag}', 'Episode {tag}']
-        x.put()
-
-        y = models.Tilde(key_name='Lost')
-        y.label = models.Typde.get_by_key_name('Show')
-        y.start = datetime(2004,9,22)
-        y.end = datetime(2010,5,23)
-        y.put()
-
-
-# G_DATE = datetime.now()
-
-# def init_global_date():
-#     global G_DATE
-#     G_DATE = datetime.now()
-
-
-# def update_global_date(y, m=None, d=None):
-#     global G_DATE
-#     G_DATE = datetime(y, m if m else G_DATE.month, d if d else G_DATE.day)
 
 
 
-# class Test(RequestHandler):
-#     def get(self, y1, m1, d1, y2, m2, d2):
-#         l = datetime(int(y1), int(m1), int(d1))
-#         r = datetime(int(y2), int(m2), int(d2))
 
 
-#         d = r - l
-
-#         i = 0
-
-#         if abs(r.time().seconds - l.time.seconds) > 10: i = 1
-#         if abs(d.time.hours) > 12: i = 3
-#         if abs(d.days) > 7: i = 4
-#         if abs(d.weeks) > 4: i = 5
-#         if abs(d.months) > 6: i = 6
-#         if abs(d.years) > 0: i = 7
 
 
+
+
+        # def _combinations(xs):
+        #     from itertools import chain as xn, combinations as cmb
+        #     return map(' '.join, xn(*map(lambda i: cmb(xs, i), range(1, len(xs) + 1))))
+
+
+
+
+
+
+
+
+# class Home(RequestHandler):
+#     def get(self):
 #         context = {
-#             'min'       : l,
-#             'max'       : r,
-#             'd'         : str(d) + ['Day', 'Month', 'Year', 'Day', 'Month', 'Year', 'asd'][i]
+#             'tilds'     : []
 #         }
 
 #         render_with_context(self, 'home.html', context)
 
 
-# class Agenda(RequestHandler):
+
+
+# class DeriveTilds(RequestHandler):
 #     def get(self):
-#         events = models.get_events(
-#                     date_min=datetime.now()
-#                  )
+#         k = self.request.get('key')
+#         t = models.Tilde.get_by_id(k) or models.Tilde.get_by_id(long(k))
 
-#         def _link(caption, c, s, order):
-#             return {
-#                 'a'         : order,
-#                 'caption'   : caption,
-#                 'url'       : uri_for(s, year=c.year, month=c.month, day=c.day).partition('?')[0]
-#             }
-
-#         items = [ {
-#             'year'      : _link(verbose_year(e.date), e.date, 'Year', e.date.year),
-#             'month'     : _link(verbose_month(e.date), e.date, 'Month', e.date.month),
-#             'day'       : _link(verbose_day(e.date), e.date, 'Day', e.date.day),
-#             'time'      : verbose_time(e.date),
-#             'event'     : e
-#         } for e in events ]
+#         tilds = [t.verbose(tag=t.tag, key=str(t.key.id()))]
+#         while t.ancestor:
+#             t = t.ancestor.get()
+#             tilds.append(t.verbose(tag=t.tag, key=str(t.key.id())))
 
 #         context = {
-#             'header'    : 'Agenda',
-#             'items'     : items
+#             'tilds'     : tilds
 #         }
 
-#         render_with_context(self, 'calendar/agenda.html', context)
+#         json_response(self, context)
 
 
-# class Year(RequestHandler):
-#     def get(self, year):
-#         y = int(year)
+# class Results2(RequestHandler):
+#     def get(self):
+        # q = self.request.get('qry')
+        #k = self.request.get('key') # Change to be based on saved seen
+        #t = models.Tilde.get_by_id(k) or models.Tilde.get_by_id(long(k))
 
-#         update_global_date(y)
+        # context = { 'results' : [] }
 
-#         def _info(m):
-#             events = models.get_events(
-#                         date_min=datetime(y, m, 1),
-#                         date_max=datetime(y, m, 1)+timedelta(days=monthrange(y, m)[1])
-#                      )
+        # result = {
+        #             'text'  : "Hello",
+        #             'id'    : 100,
+        #             'url'   : 'http://en.wikipedia.org/w/index.php?title={p}&oldid={id}'.format(id=100, p='Hello')
+        #         }
 
-#             return {
-#                 'caption'   : verbose_month(m, trim=True),
-#                 'url'       : uri_for('Month', year=y, month=m),
-#                 'info'      : aggregate_info(events,'{day} <b>{description}</b>')
-#             }
+        # context['results'].append(result)
 
-#         def _header_link(change):
-#             c = datetime(y + change, 1, 1)
-
-#             return {
-#                 'caption'   : verbose_year(c),
-#                 'url'       : uri_for('Year', year=c.year)
-#             }
-
-#         context = {
-#             'header'    : verbose_year(y),
-#             'links'     : {
-#                             'prev'  : _header_link(-1),
-#                             'next'  : _header_link(+1)
-#                           },
-#             'items'     : partition(map(_info, range(1, 13)), 4)
-#         }
-
-#         render_with_context(self, 'calendar/layout/year.html', context)
+        # json_response(self, context)
 
 
-# class Month(RequestHandler):
-#     def get(self, year, month):
-#         y = int(year)
-#         m = int(month)
+        # t = models.Tilde.query().get()
 
-#         update_global_date(y, m)
+        # url = make_query(q, t.start, t.end)
+        # logging.info(url)
+        # resp = urllib2.urlopen(url)
+        # html = json.load(resp)['items']
 
-#         def _info(c):
-#             events = models.get_events(
-#                         date_min=c,
-#                         date_max=c+timedelta(days=1)
-#                      )
+        # context = { 'results' : [] }
 
-#             def _class(c):
-#                 if c.month == m:
-#                     if c == datetime.now().date():
-#                         return 'today'
+        # for p in map(lambda d: d['formattedUrl'].split('/wiki/')[1], html):
+        #     url = 'http://en.wikipedia.org/w/index.php?title={p}&action=history&year={year}&month={month}'.format(
+        #         p = p,
+        #         year = str(t.end.year),
+        #         month = str(t.end.month)
+        #     )
 
-#                     else:
-#                         return 'inside'
+        #     from bs4 import BeautifulSoup
 
-#                 else:
-#                     return 'outside'
+        #     hdr = {'User-Agent': 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1'}
+        #     req = urllib2.Request(url, headers=hdr)
+        #     soup = BeautifulSoup(urllib2.urlopen(req))
 
-#             return {
-#                 'caption'   : verbose_day(c, trim=True),
-#                 'url'       : uri_for('Day', year=c.year, month=c.month, day=c.day) if c.month == m else uri_for('Month', year=c.year, month=c.month),
-#                 'info'      : aggregate_info(events, '{time} <b>{description}</b>'),
-#                 'class'     : _class(c)
-#             }
+        #     import re
+        #     section = soup.find(id=re.compile('mw-diff'))
 
-#         def _header_link(change):
-#             if m + change == 13:
-#                 dy = y+1
+        #     if section:
+        #         i = section.get('value')
 
-#             elif m + change == 0:
-#                 dy = y-1
+        #         result = {
+        #             'text'  : p,
+        #             'id'    : i,
+        #             'url'   : 'http://en.wikipedia.org/w/index.php?title={p}&oldid={id}'.format(id=i, p=p)
+        #         }
 
-#             else:
-#                 dy = y
-
-#             c = datetime(dy, (m + change - 1) % 12 + 1, 1)
-
-#             return {
-#                 'caption'   : verbose_month(c, trim=True) + ' ' + verbose_year(c), 
-#                 'url'       : uri_for('Month', year=c.year, month=c.month)
-#             }
-
-#         context = {
-#             'header'    : verbose_month(m) + ' <a href="' + uri_for('Year', year=y) + '">' + verbose_year(y) + '</a>',
-#             'links'     : {
-#                             'prev'  : _header_link(-1),
-#                             'next'  : _header_link(+1)
-#                           },
-#             'items'     : partition(map(_info, Calendar().itermonthdates(y, m)), 7),
-#             'days'      : VERBOSE_DAYS
-#         }
-
-#         render_with_context(self, 'calendar/layout/month.html', context)
+        #     context['results'].append(result)
 
 
-# class Day(RequestHandler):
-#     def get(self, year, month, day):
-#         y = int(year)
-#         m = int(month)
-#         d = int(day)
+        # json_response(self, context)
 
-#         update_global_date(y, m, d)
 
-#         events = models.get_events(
-#             date_min=datetime(y, m, d),
-#             date_max=datetime(y, m, d)+timedelta(days=1)).order('date')
 
-#         items = [ {
-#             'time'      : verbose_time(e.date),
-#             'event'     : e
-#         } for e in events ]
 
-#         def _header_link(change):
-#             c = datetime(y, m, d) + timedelta(days=change)
 
-#             return {
-#                 'caption'   : verbose_day(c) + ' ' + verbose_month(c, trim=True),
-#                 'url'       : uri_for('Day', year=c.year, month=c.month, day=c.day)
-#             }
+# def derive_tilde(terms):
+#     ts = terms.split(' ')
+#     cs = combs(xs)
 
-#         context = {
-#             'header'    : verbose_day(d) + ' <a href="' + uri_for('Month', year=y, month=m) + '">' + verbose_month(m) + ' ' + verbose_year(y) + '</a>',
-#             'links'     : {
-#                             'prev'  : _header_link(-1),
-#                             'next'  : _header_link(+1)
-#                           },
-#             'items'     : items,
-#             'edit_key'  : self.request.get('edit'),
-#             'del_key'   : self.request.get('delete'),
-#             'data'      : {
-#                             'hours'     : two_digits(range(0, 24)),
-#                             'minutes'   : two_digits(range(0, 60, 5)),
-#                           }
-#         }
+#     roots = [n for n in [models.Tilde.get_by_id(c) for c in cs] if n]
 
-#         render_with_context(self, 'calendar/layout/day.html', context)
+#     if len(roots) > 1: # OPTIONS
+#         return roots[0]
 
-#     def post(self, year, month, day):
-#         y = int(year)
-#         m = int(month)
-#         d = int(day)
+#     elif len(roots) == 1: # ROOT
+#         return roots
 
-#         t = self.request.get('submit_type')
+#     else: # ALL TIME
+#         return None
+        
 
-#         uri = self.request.uri
-#         uri_fix = uri.partition('?')[0]
+#     # leaves = []
 
-#         if t == 'Cancel':
-#             self.redirect(uri_fix)
+#     # ys = map(models.Tilde.get_by_id, xs)
 
-#         elif t == 'Confirm':
-#             models.Event().get(self.request.get('delete')).delete()
+#     # if any(ys):
 
-#             self.redirect(uri_fix)
+#     # else:
+
+
+#     # # try:
+#     # #     x = xs[next(i for i, j in enumerate(ys) if j)]
+
+#     # for w in terms.split(' '):
+#     #     n = models.Tilde.get_by_id(w) or leaves.append(m)
+
+#     #     # Multiple should be a 'did you mean' list
+#     #     # but only if more than one has tags matching the label
+
+#     # ms = [n]
+
+#     # for tag in n.label.tag:
+#     #     if len(ms) > 0:
+#     #         for m in ms:
+#     #             if tag.format(tag = m.tag, key = n.key().id_or_name()) in cs:
+#     #                 n = m
+#     #                 break
+
+#     #         ms = sum([list(m.children) for m in ms], [])
+
+#     return n
+
+
+
+
+        #dts = start.strftime('%Y%m%d'),
+        #dte = end.strftime('%Y%m%d'),
+
+
+
+
+
+
+
+# class Test(RequestHandler):
+#     def get(self):
+#         render_with_context(self, 'results.html', context)
+
+# class DoStuff(RequestHandler):
+#     def get(self):
+#         pass
+#         # x = models.Typde(key_name='Show')
+#         # x.tag = ['{key}', 'Season {tag}', 'Episode {tag}']
+#         # x.put()
+
+#         # y = models.Tilde(key_name='Lost')
+#         # y.label = models.Typde.get_by_key_name('Show')
+#         # y.start = datetime(2004,9,22)
+#         # y.end = datetime(2010,5,23)
+#         # y.put()
+
+
+
+
+
+# class Test(RequestHandler):
+#     def get(self, t=None):
+#         if t:
+#             m = models.Tilde.get_by_id(t) or models.Tilde.get_by_id(long(t))
+
+#             tilds = map(lambda x: { 'text': x.tag, 'value' : x.key.id() }, m.children)
 
 #         else:
-#             s = None
+#             tilds = [{'text': 'Lost', 'value' : 'Lost'}]
 
-#             if t == 'Save':
-#                 hh = int(self.request.get('edit_hour'))
-#                 mm = int(self.request.get('edit_minute'))
 
-#                 s = self.request.get('edit_description')
-#                 e = models.Event().get(self.request.get('edit'))
+#         context = {
+#             't'     : t,
+#             'data'  : { 'tilds' : tilds }
+#         }
 
-#             elif t == 'Insert':
-#                 hh = int(self.request.get('add_hour'))
-#                 mm = int(self.request.get('add_minute'))
+#         render_with_context(self, 'test.html', context)
 
-#                 s = self.request.get('add_description')
-#                 e = models.Event()
+#     def post(self):
+#         q = self.request.get('q')
+#         t = self.request.get('tilds')
 
-#             if s:
-#                 e.user_id = users.get_current_user().user_id()
-#                 e.description = s
-#                 e.date = datetime(y, m, d, hh, mm)
-#                 e.put()
+#         Test.get(self, t)
 
-#                 self.redirect(uri_fix)
-
-#             else:
-#                 self.redirect(uri)

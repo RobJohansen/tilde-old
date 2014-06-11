@@ -1,0 +1,228 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Tilde</title>
+
+    <link rel="stylesheet" type="text/css" href="styles/font-awesome/css/font-awesome.min.css">
+
+
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" media="screen">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+
+
+<link href="//raw.github.com/jharding/typeahead.js-bootstrap.css/master/typeahead.js-bootstrap.css" rel="stylesheet" media="screen">
+<script src="scripts/typeahead-bundle.js"></script>
+
+
+    <style>
+.twitter-typeahead .tt-hint {
+    display: block;
+    height: 34px;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.428571429;
+    border: 1px solid transparent;
+    border-radius:4px;
+}
+.twitter-typeahead .hint-small {
+    height: 30px;
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 3px;
+    line-height: 1.5;
+}
+.twitter-typeahead .hint-large {
+    height: 45px;
+    padding: 10px 16px;
+    font-size: 18px;
+    border-radius: 6px;
+    line-height: 1.33;
+}
+
+
+/*      .tild {
+        cursor:             pointer;
+      }
+
+      .tild:hover {
+        color:              gray;
+        background-color: beige;
+      }
+
+      .tild .fa,
+      .tild .tilde {
+        display: inline-block;
+        width: 15px;
+        line-height: 15px;
+      }
+
+      .tild {
+        color:            #74A2D6;
+        font-weight:      bolder;
+        font-size:        15px;
+        border-left:      none;
+        border-right:     none;
+        padding: 0px !important;
+      }
+
+
+*/
+
+
+
+/*
+      #tilds {
+
+      }*/
+
+      /*.tild span {
+        cursor:             pointer;
+        display:            inline-block;
+
+        height:             20px;
+        line-height:        20px;
+        min-width:          20px;
+
+        margin:             0px !important;
+
+        border:             1px dotted #3079ed;
+      }*/
+
+
+      /*.tild:hover span {
+        background-color:   #357ae8;
+        border-color:       #2f5bb7;
+        color:              #ffffff;
+      }
+      */
+
+      /*.tild {
+        padding: 2px !important;
+        color:            #74A2D6;
+        font-weight:      bolder;
+        border-left:      none;
+        border-right:     none;
+        background-color: transparent;
+      }*/
+
+    </style>
+
+    <script type="text/javascript">
+      var substringMatcher = function(strs) {
+        return function findMatches(q, cb) {
+          var matches, substringRegex;
+       
+          // an array that will be populated with substring matches
+          matches = [];
+       
+          // regex used to determine if a string contains the substring `q`
+          substrRegex = new RegExp(q, 'i');
+       
+          // iterate through the pool of strings and for any string that
+          // contains the substring `q`, add it to the `matches` array
+          $.each(strs, function(i, str) {
+            if (substrRegex.test(str)) {
+              // the typeahead jQuery plugin expects suggestions to a
+              // JavaScript object, refer to typeahead docs for more info
+              matches.push({ value: str });
+            }
+          });
+       
+          cb(matches);
+        };
+      };
+       
+      var states = ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California',
+        'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii',
+        'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
+        'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota',
+        'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
+        'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota',
+        'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island',
+        'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont',
+        'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
+      ];
+
+
+
+function tild_hover() {
+  $(this).find('.fa').toggleClass('hide');
+  $(this).find('span').toggleClass('hide');
+}
+
+function tild_click(e) {
+  $(e.target).closest('.tild').remove();
+}
+
+
+
+
+
+
+
+$(document).ready(function() {
+     $('#tilds').typeahead({                               
+          name: "cities",                
+          local: ['italy', 'france', 'england', 'united states', 'brazil', 'spain']                                              
+     });
+
+
+  // $('#terms').keydown(function(e) {
+  //   if (e.which == 13) {
+  //     load();
+  //   } else if (e.which == 222) {
+  //     $('#tilds').focus();
+
+  //     return false;
+  //   }
+  // });
+
+
+
+  $('#terms').keyup(function(e) {
+    if (e.which == 13) {
+      alert('search');
+    } else if (e.which == 222) {
+      $(e.target).before('<span class="tild input-group-addon"><span class="tilde">~</span><i class="fa fa-times hide"></i>' + $(this).val().split('~')[0] + '</span>');
+
+      $('.tild').hover(tild_hover, tild_hover);
+      $('.tild').click(tild_click);
+
+      $(this).val('');
+    } else if (e.which == 8 && $(this).val() == '') {
+      $('.tild:last').remove();
+    }
+  });
+
+  $('.tild').click();
+
+
+
+
+ 
+  
+
+});
+
+    </script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  </head>
+
+  <body style="margin: 100px;">
+
+    <div class="input-group drop-shadow">
+      <input id="terms" type="text" class="form-control" />
+
+      <span class="input-group-addon">
+        ~
+      </span>
+
+    <input id="tilds" type="text" class="form-control"  />
+
+    </div>
+
+  </body>
+</html>

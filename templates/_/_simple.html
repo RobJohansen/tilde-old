@@ -1,0 +1,101 @@
+<html>
+  <head>
+    <title>Tilde</title>
+
+    <script type="text/javascript" src="js/jquery-1.9.1.js"></script>
+    <script type="text/javascript">
+      var KEY_ENTER = 13;
+
+      jQuery.fn.toggleLoading = function() {
+        $(this[0]).toggleClass('fa-refresh fa-spin');
+      };
+
+      function setPage(url) {
+        $('#page-loading').toggleLoading();
+        $('#page').attr('src', url);
+      }
+
+      function pageLoaded() {
+        $('#page-loading').toggleLoading();
+      }
+
+      function getResults() {
+        $('#results-loading').toggleLoading();
+        $('#results').html('');
+
+        $.get(
+          '/simple_results/' + $('#terms').val() + '/' + $('#tilds').val(),
+          function(o) {
+            if (o.constructor == {}.constructor) {
+              // JSON - Single Result
+              setPage(o.url);
+            } else {
+              // HTML - Multiple Results
+              $('#results').html(o);
+              $('#results a').click(function() {
+                setPage($(this).attr('tag'));
+              });
+            }
+
+            $('#results-loading').toggleLoading();
+          }
+        );
+      }
+
+      function terms_key_down(e) {
+        if (e.which == KEY_ENTER) {
+          getResults();
+        }
+      }
+
+      function tilds_key_down(e) {
+        if (e.which == KEY_ENTER) {
+          getResults();
+        }
+      }
+
+      $(document).ready(function() {
+        $('#terms').keydown(terms_key_down);
+        $('#tilds').keydown(tilds_key_down);
+
+        $('#page').load(pageLoaded);
+      });
+    </script>
+
+    <link rel="stylesheet" type="text/css" href="css/font-awesome/css/font-awesome.min.css">
+    <style type="text/css">
+      body {
+        margin: 0px;
+      }
+
+      iframe#page {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Search -->
+    <input id="terms" type="textbox" />
+    
+    <input id="tilds" type="textbox" />
+
+    <!-- Results -->
+    <div>
+      <i id="results-loading" class="fa"></i>
+
+      <div id="results"></div>
+    </span>
+
+    <hr />
+
+    <!-- Page -->
+    <div>
+      <i id="page-loading" class="fa"></i>
+
+      <iframe id="page"></iframe>
+    </div>
+  </body>
+</html>
