@@ -1,31 +1,64 @@
 /* TIMELINE */
 #timeline {
-  padding-bottom:   10px;
+  padding-bottom:      10px;
 }
 
-.node {
-  font-size: 12px !important;
-  line-height: 1;
-  cursor: pointer;
+div.timeline-event-content {
+  margin:               0px !important;
 }
 
-.node i {
-  color:            gray;
+div.timeline-event {
+  cursor:               pointer;
+  float:                left;
+  font-size:            12px !important;
+  line-height:          1;
+  border-radius:        0;
+  border:               1px solid rgb(125, 125, 125);
+  background-color:     rgb(216, 216, 216);
+  min-width:            25px;   /*TODO : BETTER WAY TO HANDLE THIS;*/
 }
 
-.node i:hover {
-  cursor:           pointer;
-  color:            black;
+div.timeline-event-selected {
+  border-color:         rgb(255, 0, 0) !important;
 }
 
-.btn-seen {
-  float: right;
+div.timeline-event-progress {
+  position:             absolute;
+  float:                left;
+  overflow:             hidden;
+  height:               100%;
+  border-right:         2px solid rgb(0, 0, 0);
 }
 
-.node.complete {
-  background-color: rgb(0, 255, 0);
+a.timeline-event-title {
+  position:             absolute;
+  float:                left;
+  margin:               5px;
+  color:                rgb(120, 120, 120);
 }
 
-.selected {
-  border: 1px solid red !important;
+a.timeline-event-title:hover {
+  color:                rgb(0, 0, 0);
+}
+
+i.timeline-event-button {
+  position:             relative;
+  float:                right;
+  margin:               5px;
+  color:                rgb(125, 125, 125);
+}
+
+i.timeline-event-button:hover {
+  cursor:               pointer;
+  color:                rgb(0, 0, 0);
+}
+
+div.timeline-customtime {
+  background-color:     lime !important;
+  width:                2px;
+}
+
+div.item-line {
+  border:               none;
+  border-left:          2px solid rgb(0, 200, 0) !important;
 }

@@ -2,6 +2,8 @@
   <head>
     <title>Tilde</title>
 
+    <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
+
     <!-- jQuery -->
     <script type="text/javascript" src="js/jquery/jquery-1.9.1.js"></script>
     <script type="text/javascript" src="js/jquery/jquery-ui.js"></script>
@@ -16,12 +18,9 @@
 
     <!-- Bootstrap -->
     <script type="text/javascript" src="js/bootstrap/bootstrap.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="css/bootstrap/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="css/bootstrap/bootstrap-theme.min.css">
-
-    <!-- Bootstrap Addons -->
     <script type="text/javascript" src="js/bootstrap/bootbox.min.js"></script>
     <script type="text/javascript" src="js/bootstrap/bootstrap.typeahead.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap/bootstrap.min.css">
 
     <!-- Global -->
     <script type="text/javascript" src="js/global.js"></script>
@@ -37,24 +36,23 @@
   <body>
     <!-- Calendar -->
     <div id="timeline"></div>
-    <i id="timeline-loading" class="fa"></i>
 
     <!-- Search Box -->
     <div id="search" class="drop-shadow">
       <input id="terms" type="text" class="form-control" autocomplete="off" />
 
-      <span class="appender">
-        <i id="page-loading" class="fa" style="float: right"></i>
-      </span>
+      {%- for t in tilds -%}
+        <span class="tild"><span class="tilde">~</span><i class="fa fa-times hide"></i>{{ t }}</span>
+      {%- endfor -%}
 
-      <span id="tilds-section" class="appender">
+      <span id="tilds-section">
         <span class="tilde">~</span>
 
         <input id="tilds" type="text" class="form-control" autocomplete="off" />
-
-        <i id="tilds-loading" class="fa"></i>
       </span>
     </div>
+
+    <i id="tilds-loading" class="fa"></i>
 
     <!-- Page -->
     <div>

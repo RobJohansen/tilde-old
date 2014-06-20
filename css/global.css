@@ -1,11 +1,11 @@
 /* GLOBAL */
 body {
-  margin: 0px;
+  margin:             0px;
   overflow:           hidden;
 }
 
 input[type=text]::-ms-clear {
-  display: none;
+  display:            none;
 }
 
 *:hover,
@@ -16,11 +16,26 @@ input[type=text]::-ms-clear {
 }
 
 .drop-shadow {
-  box-shadow: 0 0 10px 1px rgba(0, 0, 0, .5);
   -webkit-box-shadow: 0 0 10px 1px rgba(0, 0, 0, .5);
+  -moz-box-shadow:    0 0 10px 1px rgba(0, 0, 0, .5);
+  box-shadow:         0 0 10px 1px rgba(0, 0, 0, .5);
 }
 
-.drop-shadow-no-left {
-  -webkit-box-shadow: 5px 0 10px 1px rgba(0, 0, 0, .5);
-  box-shadow: 8px 0 10px 1px rgba(0, 0, 0, .5);
+.rotate {
+
+/* Safari */
+-webkit-transform: rotate(-90deg);
+
+/* Firefox */
+-moz-transform: rotate(-90deg);
+
+/* IE */
+-ms-transform: rotate(-90deg);
+
+/* Opera */
+-o-transform: rotate(-90deg);
+
+/* Internet Explorer */
+filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+
 }

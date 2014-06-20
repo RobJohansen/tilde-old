@@ -13,6 +13,21 @@ indexes:
 - kind: Tilde
   properties:
   - name: ancestor
+  - name: end
+
+- kind: Tilde
+  properties:
+  - name: ancestor
+  - name: mickey
+
+- kind: Tilde
+  properties:
+  - name: ancestor
+  - name: start
+
+- kind: Tilde
+  properties:
+  - name: ancestor
   - name: tag
 
 - kind: Tilde

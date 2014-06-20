@@ -43,8 +43,10 @@ def render_with_context(self, filename, context):
 #########
 class Home(RequestHandler):
     def get(self):
+        tilds = [t for t in self.request.get('ts').split('~') if len(t) > 0] 
+
         context = {
-            'tilds'     : self.request.get('ts')
+            'tilds'     : tilds
         }
 
         render_with_context(self, 'home.html', context)
@@ -72,38 +74,55 @@ class Page(RequestHandler):
         self.response.out.write(t)
 
 
+def to_json_date(d):
+    return d.strftime("%Y-%m-%d")
+
+
 class Timeline(RequestHandler):
     def get(self, tilds):
         n = models.get_current_tild(tilds)
 
         # Populate
-        results = []
-
         context = { }
 
+        results = []
+
         if n:
-            results = [n] + list(n.children())
+            # TILDE MARK
+            # results.append({
+            #     'start'         : models.most_complete_date(n) + timedelta(days=17),
+            #     'end'           : None,
+            #     'group'         : None,
+            #     'content'       : None,
+            #     'className'     : None
+            # })
 
-            if n.ancestor:
-                results.append(n.ancestor.get())
-                results.extend(n.ancestor.get().children())
+            # BOUNDARIES
+            # diff = max((n.end - n.start) / 10, timedelta(days=1))
 
-            diff = (n.end - n.start) / 10
-
-            def _to_json_date(d):
-                return d.strftime("%Y-%m-%d")
+            # context.update({
+            #     'min'       : to_json_date(n.start - diff),
+            #     'max'       : to_json_date(n.end + diff)
+            # })
 
             context.update({
-                'min'       : _to_json_date(n.start - diff),
-                'max'       : _to_json_date(n.end + diff),
-                'custom'    : _to_json_date(n.end) #.seen_date('Lost'))
+                'custom'    : to_json_date(models.most_complete_date(n))
             })
+
+
+            # RESULTS
+            if n.ancestor:
+                m = n.ancestor.get()
+                results.append((m, 0))
+                results.extend([(c, 1) for c in m.children() if not n.key == c.key])
+
+            results.append((n, 1))
+            results.extend([(c, 2) for c in n.children()])
+
+            results = [n.to_calendar_node(level=l) for (n, l) in results]
 
         else:
             results = []
-
-        results = zip(results, [True] + [False] * (len(results) - 1))
-        results = sorted(map(lambda (x, b): x.to_calendar_node(b), results), key=itemgetter('start'))
 
         # Build
         from gviz_api import DataTable
@@ -118,7 +137,6 @@ class Timeline(RequestHandler):
 
         table.LoadData(results)
 
-
         context.update({
             'data'      : table.ToJSon(),
         })
@@ -130,7 +148,17 @@ class Timeline(RequestHandler):
 class Derive(RequestHandler):
     def get(self, id):
         context = {
-            'tilds'     : models.derive_tilds(id)
+            'success'   : True
+        }
+
+        try:
+            tilds = models.derive_tilds(id)
+
+        except Exception:
+            context['success'] = False
+
+        context = {
+            'tilds'     : tilds
         }
 
         json_response(self, context)
@@ -138,46 +166,129 @@ class Derive(RequestHandler):
 
 class SeenTag(RequestHandler):
     def post(self, id):
-        m = models.Tilde.get_by_id(id) or models.Tilde.get_by_id(long(id))
+        context = {
+            'success'   : True
+        }
 
-        d = m.end
+        try:
+            n = models.Tilde.get_by_id(id) or models.Tilde.get_by_id(long(id))
 
-        while m.ancestor:
-            m = m.ancestor.get()
+            if n.is_complete:
+                n.process_uncompletion()
 
-        models.process_completion(m.key.id(), d)
+            else:
+                n.process_completion()
+
+        except Exception:
+            context['success'] = False
+
+        context.update({
+            'custom'    : to_json_date(models.most_complete_date(n))
+        })
+
+        json_response(self, context)
 
 
 class SeenTime(RequestHandler):
-    def post(self, id, year, month, day):
-        d = datetime(long(year), long(month), long(day))
+    def post(self, year, month, day, id):
+        context = {
+            'success'   : True
+        }
 
-        models.process_completion(id.split('~')[1], d)
+        try:
+            id = id.split('~')[1]
+            n = models.Tilde.get_by_id(id) or models.Tilde.get_by_id(long(id))
 
+            d = datetime(long(year), long(month), long(day))
+            
+            n.process_check(d)
 
-class Test(RequestHandler):
-    def get(self):
-        self.response.write(models.seen_date('Lost'))
+        except Exception:
+            context['success'] = False
 
+        context.update({
+            'custom'    : to_json_date(models.most_complete_date(n))
+        })
 
-
-
-
-
-
-
-
-
-
-
-        # def _combinations(xs):
-        #     from itertools import chain as xn, combinations as cmb
-        #     return map(' '.join, xn(*map(lambda i: cmb(xs, i), range(1, len(xs) + 1))))
+        json_response(self, context)
 
 
+# /push/0285331/24
+# /push/0285333/Alias
+# /push/0411008/Lost
+# /push/0944947/Game of Thrones
+# /push/0804503/Mad Men
+class PushTask(RequestHandler):
+    def get(self, id, title):
+        from google.appengine.api import taskqueue
+
+        taskqueue.add(url='/add_show/' + str(id) + '/' + str(title))
+        self.response.write('Task Added')
+
+
+class AddShow(RequestHandler):
+    def post(self, id, title):
+        typde_name = 'Show'
+
+        import logging
+
+        from imdb import IMDb
+        from imdb.helpers import sortedSeasons, sortedEpisodes
+
+        def parse_date(d):
+            try:
+                return datetime.strptime(d.replace('.', ''), '%d %b %Y')
+
+            except Exception:
+                return datetime.strptime(d.replace('.', ''), '%b %Y')
+
+        i = IMDb()
+        m = i.get_movie(id)
+        i.update(m, 'episodes')
+
+        t = models.Typde.get_by_id(typde_name)
+
+        show = models.Tilde(id=str(m.get('title', title)), label=t.key)
+        show.start = parse_date(m['episodes'][1][1]['original air date'])
+        show.put()
+        
+        seasons = sortedSeasons(m)
+
+        for s in seasons:
+            if s > 0:
+                episodes = sortedEpisodes(m, season=s)
+
+                start_date = parse_date(episodes[0]['original air date'])
+
+                season = models.Tilde(ancestor=show.key)
+                season.start = start_date
+                season.tag = str(s)
+                season.put()
+
+                for (e, i) in zip(episodes, range(1, 100)):
+                    start_date = parse_date(e['original air date'])
+                    end_date = start_date + timedelta(days=1)
+
+                    episode = models.Tilde(ancestor=season.key)
+                    episode.start = start_date
+                    episode.end = end_date
+                    episode.tag = str(i)
+                    episode.title = e['title']
+                    episode.put()
+
+                season.end = end_date
+                season.put()
+
+        show.end = end_date
+        show.put()
 
 
 
+
+
+# def _combinations(xs):
+#     from itertools import chain as xn, combinations as cmb
+#     return map(' '.join, xn(*map(lambda i: cmb(xs, i), range(1, len(xs) + 1))))
 
 
 

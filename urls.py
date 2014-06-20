@@ -45,7 +45,7 @@ urls = [
     ),
 
     Route(
-        r'/seen/<id:([^/]+)?>/<year:\d{4}>/<month:\d+>/<day:\d+>',
+        r'/seen/<year:\d{4}>/<month:\d+>/<day:\d+>/<id:([^/]+)?>',
         handler=v.SeenTime,
         name='SeenTime'
     ),
@@ -53,9 +53,15 @@ urls = [
 
 
     Route(
-        r'/test',
-        handler=v.Test,
-        name='Test'
+        r'/push/<id:([^/]+)?>/<title:([^/]+)?>',
+        handler=v.PushTask,
+        name='PushTask'
+    ),
+
+    Route(
+        r'/add_show/<id:([^/]+)?>/<title:([^/]+)?>',
+        handler=v.AddShow,
+        name='AddShow'
     )
 
 ]
