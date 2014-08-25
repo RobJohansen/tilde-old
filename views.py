@@ -1,27 +1,19 @@
 from google.appengine.api import users, datastore_errors
-
 from webapp2 import RequestHandler, uri_for
-
 from datetime import datetime, timedelta, date
-
-
 
 import jinja2
 import os
 import json
 
-import logging
-
-from operator import itemgetter
-
-
 import models
 import pages
 
 
-#############
-# RENDERERS #
-#############
+
+###########
+# HELPERS #
+###########
 J_ENV = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
 
@@ -32,18 +24,24 @@ def json_response(self, context):
 
 
 def render_with_context(self, filename, context):
-    context.update({})
+    context.update({
+        'user'          : models.get_user_profile()
+    })
 
     template = J_ENV.get_template('templates/' + filename)
     self.response.out.write(template.render(context))
 
 
-#########
-# VIEWS #
-#########
+def json_date(d):
+    return d.strftime("%Y-%m-%d")
+
+
+#####################
+# VIEWS : TEMPLATES #
+#####################
 class Home(RequestHandler):
     def get(self):
-        tilds = [t for t in self.request.get('ts').split('~') if len(t) > 0] 
+        tilds = [ t for t in self.request.get('ts').split('~') if len(t) > 0 ]
 
         context = {
             'tilds'     : tilds
@@ -52,123 +50,133 @@ class Home(RequestHandler):
         render_with_context(self, 'home.html', context)
 
 
+class AdminConsole(RequestHandler):
+    def get(self):
+        context = {
+
+        }
+
+        render_with_context(self, 'admin.html', context)
+
+
+######################
+# VIEWS : BLOODHOUND #
+######################
 class Results(RequestHandler):
     def get(self, query, tilds):
-        timestamp = models.get_timestamp(tilds)
-        context = pages.search_wiki(query, timestamp)
+        context = { }
 
-        json_response(self, context)
+        try:
+            timestamp = models.get_timestamp(tilds)
+
+            context = pages.search_wiki(query, timestamp)
+
+        except Exception:
+            pass
+
+        finally:
+            json_response(self, context)
 
 
 class Tilds(RequestHandler):
     def get(self, tilds):
-        context = models.get_next_tilds(tilds)
-
-        json_response(self, context)
-
-
-class Page(RequestHandler):
-    def get(self, page, timestamp):
-        t = pages.fetch_wiki(page, timestamp)
-
-        self.response.out.write(t)
-
-
-def to_json_date(d):
-    return d.strftime("%Y-%m-%d")
-
-
-class Timeline(RequestHandler):
-    def get(self, tilds):
-        n = models.get_current_tild(tilds)
-
-        # Populate
         context = { }
 
-        results = []
+        try:
+            timestamp = models.get_timestamp(tilds)
 
-        if n:
-            # TILDE MARK
-            # results.append({
-            #     'start'         : models.most_complete_date(n) + timedelta(days=17),
-            #     'end'           : None,
-            #     'group'         : None,
-            #     'content'       : None,
-            #     'className'     : None
-            # })
+            context = models.get_next_tilds(tilds)
 
-            # BOUNDARIES
-            # diff = max((n.end - n.start) / 10, timedelta(days=1))
+        except Exception:
+            pass
 
-            # context.update({
-            #     'min'       : to_json_date(n.start - diff),
-            #     'max'       : to_json_date(n.end + diff)
-            # })
+        finally:
+            json_response(self, context)
+            
 
-            context.update({
-                'custom'    : to_json_date(models.most_complete_date(n))
-            })
+################
+# VIEWS : JSON #
+################
+class Timeline(RequestHandler):
+    def get(self, tilds):
+        context = { 'success' : True }
 
+        try:
+            n = models.get_current_tild(tilds)
 
-            # RESULTS
-            if n.ancestor:
-                m = n.ancestor.get()
-                results.append((m, 0))
-                results.extend([(c, 1) for c in m.children() if not n.key == c.key])
-
-            results.append((n, 1))
-            results.extend([(c, 2) for c in n.children()])
-
-            results = [n.to_calendar_node(level=l) for (n, l) in results]
-
-        else:
             results = []
 
-        # Build
-        from gviz_api import DataTable
+            if n:
+                # RESULTS
+                if n.ancestor:
+                    m = n.ancestor.get()
+                    results.append((m, 0))
+                    results.extend([(c, 1) for c in m.children() if not n.key == c.key])
 
-        table = DataTable({
-            'start'     : ('date', 'Start'),
-            'end'       : ('date', 'End'),
-            'content'   : ('string', 'Content'),
-            'group'     : ('string', 'Group'),
-            'className' : ('string', 'Class')
-        })
+                results.append((n, 1))
+                results.extend([(c, 2) for c in n.children()])
 
-        table.LoadData(results)
+                results = [n.to_calendar_node(level=l) for (n, l) in results]
 
-        context.update({
-            'data'      : table.ToJSon(),
-        })
+                # UNTIL DATE PLACEHOLDER
+                results.append({
+                    'start'         : results[0]['start'],
+                    'end'           : None,
+                    'group'         : None,
+                    'content'       : None,
+                    'className'     : None
+                })
 
-        # Render
-        json_response(self, context)
+                # BOUNDARIES
+                # diff = max((n.end - n.start) / 10, timedelta(days=1))
+
+                # context.update({
+                #     'min'       : json_date(n.start - diff),
+                #     'max'       : json_date(n.end + diff)
+                # })
+
+            from gviz_api import DataTable
+
+            table = DataTable({
+                'start'     : ('date', 'Start'),
+                'end'       : ('date', 'End'),
+                'content'   : ('string', 'Content'),
+                'group'     : ('string', 'Group'),
+                'className' : ('string', 'Class')
+            })
+
+            table.LoadData(results)
+
+            context['data'] = table.ToJSon()
+
+        except Exception as e:
+            context['success'] = False
+            context['error'] = str(e)
+
+        finally:
+            json_response(self, context)
 
 
 class Derive(RequestHandler):
     def get(self, id):
-        context = {
-            'success'   : True
-        }
+        context = { 'success' : True }
 
         try:
             tilds = models.derive_tilds(id)
 
-        except Exception:
+            context['tilds'] = tilds
+
+        except Exception as e:
             context['success'] = False
+            context['error'] = str(e)
 
-        context = {
-            'tilds'     : tilds
-        }
-
-        json_response(self, context)
+        finally:
+            json_response(self, context)
 
 
 class SeenTag(RequestHandler):
     def post(self, id):
-        context = {
-            'success'   : True
-        }
+        context = { 'success' : True }
 
         try:
             n = models.Tilde.get_by_id(id) or models.Tilde.get_by_id(long(id))
@@ -179,50 +187,59 @@ class SeenTag(RequestHandler):
             else:
                 n.process_completion()
 
-        except Exception:
+        except Exception as e:
             context['success'] = False
+            context['error'] = str(e)
 
-        context.update({
-            'custom'    : to_json_date(models.most_complete_date(n))
-        })
-
-        json_response(self, context)
+        finally:
+            json_response(self, context)
 
 
 class SeenTime(RequestHandler):
     def post(self, year, month, day, id):
-        context = {
-            'success'   : True
-        }
+        context = { 'success' : True }
 
         try:
             id = id.split('~')[1]
             n = models.Tilde.get_by_id(id) or models.Tilde.get_by_id(long(id))
 
-            d = datetime(long(year), long(month), long(day))
-            
-            n.process_check(d)
+            n.process_check(datetime(long(year), long(month), long(day)))
 
-        except Exception:
+        except Exception as e:
             context['success'] = False
+            context['error'] = str(e)
 
-        context.update({
-            'custom'    : to_json_date(models.most_complete_date(n))
-        })
-
-        json_response(self, context)
+        finally:
+            json_response(self, context)
 
 
-# /push/0285331/24
-# /push/0285333/Alias
-# /push/0411008/Lost
-# /push/0944947/Game of Thrones
-# /push/0804503/Mad Men
+################
+# VIEWS : HTML #
+################
+class Page(RequestHandler):
+    def get(self, page, timestamp):
+        t = pages.fetch_wiki(page, timestamp)
+
+        self.response.out.write(t)
+
+
+
+
+
+
+
+
+
+# /0285331/24
+# /0285333/Alias
+# /0411008/Lost
+# /0944947/Game of Thrones
+# /0804503/Mad Men
 class PushTask(RequestHandler):
     def get(self, id, title):
         from google.appengine.api import taskqueue
 
-        taskqueue.add(url='/add_show/' + str(id) + '/' + str(title))
+        taskqueue.add(url='/admin/add_show/' + str(id) + '/' + str(title))
         self.response.write('Task Added')
 
 

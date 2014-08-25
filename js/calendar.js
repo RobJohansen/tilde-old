@@ -127,8 +127,8 @@ jQuery.fn.timelineSiblings = function() {
         var tLevel = t.timelineLevel();
         var tPos = t.position();
 
-        return tLevel == nLevel &&
-               tPos.left != nPos.left;
+        return tLevel == nLevel 
+            && tPos.left != nPos.left;
     });
 };
 
@@ -145,9 +145,9 @@ jQuery.fn.timelineDescendants = function() {
         var tLevel = t.timelineLevel();
         var tPos = t.position();
 
-        return tLevel > nLevel &&
-               tPos.left >= nPos.left &&
-               tPos.left + t.width() <= nPos.left + n.width() + 5;
+        return tLevel > nLevel
+            && tPos.left >= nPos.left
+            && tPos.left <= nPos.left + n.width() + 20;
     });
 };
 
@@ -155,22 +155,6 @@ jQuery.fn.timelineDescendants = function() {
 /////////////
 // HELPERS //
 /////////////
-
-//     // Parent
-//     var p = $(this).timelineParent();
-
-//     while (p.length > 0) {
-//         var children = p.timelineChildren();
-
-//         var percentage = children.filter(function(index) {
-//             return $(this).isComplete();
-//         }).length / children.length * 100;
-        
-//         p.markCompletion(percentage);
-
-//         p = p.timelineParent();
-
-
 function percentRGB(p, c) {
     var g = p > 50 ? 255 - c : Math.round(p * 5.12 - c);
     var b = p <= 50 ? 99 - c : Math.round(100 - c - (p - 50) * 2);
@@ -218,9 +202,40 @@ jQuery.fn.markCompletion = function(percentage) {
         .removeClass(percentage == 100 ? 'fa-check' : 'fa-times');
 
     $(this).each(function() {
-        timeline.updateData(timeline.getItemIndex(this), {'content' : this.innerHTML });
+        timeline.updateData(timeline.getItemIndex(this), {
+            'content' : this.innerHTML
+        });
     })
 };
+
+
+function mostCompleteDate() {
+    var all = $('.timeline-event').not('.item-line');
+
+    var ts = all.filter(function(i) {
+        var t = $(this);
+
+        return all.filter(function(x) {
+            var c = $(this);
+
+            return !c.isComplete()
+                && t.position().left > c.position().left
+                && t.timelineLevel() <= c.timelineLevel();
+        }).length == 0;
+    });
+
+    var mx = Math.max.apply(null,
+        ts.map(function() {
+            return $(this).position().left;
+        }).get()
+    );
+
+    var tild = all.filter(function(i) {
+        return $(this).position().left == mx;
+    });
+
+    return new Date(timeline.screenToTime(tild.position().left + (tild.isComplete() ? tild.width() : 0)));
+}
 
 
 //////////////////
@@ -230,20 +245,57 @@ function refreshTimeline(options) {
     $('.timeline-event-button').unbind('click', timelineEventMarked);
     $('.timeline-event-title').unbind('click', timelineEventSelected);
 
-    if (options.custom) {
-        timeline.setCustomTime(new Date(options.custom));
-    }
-
     if (options.min && options.max) {
         timeline.setVisibleChartRange(new Date(options.min), new Date(options.max));
-    } else {
-        timeline.setVisibleChartRangeAuto();
     }
 
     timeline.redraw();
 
     $('.timeline-event-button').click(timelineEventMarked);
     $('.timeline-event-title').click(timelineEventSelected);
+}
+
+function timelineChange(e) {
+    var d = $('.timeline-customtime').position().left;
+
+    $('.timeline-event').each(function() {
+        var n = $(this);
+        var percentage = (d - n.position().left) / n.width() * 100;
+
+        // Math.max(0, Math.min(100, percentage)) TODO: Change to Percentages
+        //     // Parent
+        //     var p = $(this).timelineParent();
+
+        //     while (p.length > 0) {
+        //         var children = p.timelineChildren();
+
+        //         var percentage = children.filter(function(index) {
+        //             return $(this).isComplete();
+        //         }).length / children.length * 100;
+                
+        //         p.markCompletion(percentage);
+
+        //         p = p.timelineParent();
+
+        n.markCompletion(percentage < 100 ? 0 : 100);
+    });
+}
+
+
+////////////
+// EVENTS //
+////////////
+function updateCompleteDate() {
+    timeline.setCustomTime(mostCompleteDate());
+}
+
+
+function updateUntilDate() {
+    var line = $('.timeline-event.item-line')[0];
+
+    timeline.updateData(timeline.getItemIndex(line), { 
+        'start' : new Date(mostCompleteDate())
+    });
 }
 
 
@@ -254,9 +306,16 @@ function updateTimeline() {
         '/timeline/' + $('.tild').text(),
 
         function(ret) {
-            timeline.draw(new google.visualization.DataTable(ret.data, 0.6));
+            if (ret.success) {
+                timeline.draw(new google.visualization.DataTable(ret.data, 0.6));
 
-            refreshTimeline(ret);
+                updateCompleteDate();
+                updateUntilDate();
+
+                refreshTimeline(ret);
+            } else {
+                showError(ret.error);
+            }
 
             $('#tilds-loading').setLoading(false);
         }
@@ -264,9 +323,6 @@ function updateTimeline() {
 }
 
 
-////////////
-// EVENTS //
-////////////
 function timelineEventSelected() {
     var t = $(this);
 
@@ -279,8 +335,8 @@ function timelineEventSelected() {
                 addTilds(ret.tilds);  // TODO: ***************** TENUOUS LINK
 
                 updateTimeline(); // TODO: ONLY UPDATED PARTS
-
-                refreshTimeline(ret);
+            } else {
+                showError(ret.error);
             }
         }
     );
@@ -288,64 +344,65 @@ function timelineEventSelected() {
 
 
 function timelineEventMarked() {
-    var t = $(this);
+    if (!$('#tilds-loading').hasClass('fa-refresh')) {
+        var t = $(this);
 
-    $('#tilds-loading').setLoading(true);
+        $('#tilds-loading').setLoading(true);
 
-    $.post(
-        '/seen/' + t.attr('tag'),
+        $.post(
+            '/seen/' + t.attr('tag'),
 
-        function(ret) {
-            if (ret.success) {
-                refreshTimeline(ret);
+            function(ret) {
+                if (ret.success) {
+                    refreshTimeline(ret);
+                } else {
+                    showError(ret.error);
+                }
+
+                $('#tilds-loading').setLoading(false);
             }
+        );
 
-            $('#tilds-loading').setLoading(false);
+        var n = t.closest('.timeline-event');
+
+        if (t.isComplete()) {
+            n.processUncompletion();
+        } else {
+            n.processCompletion();
         }
-    );
 
-    var n = t.closest('.timeline-event');
-
-    if (t.isComplete()) {
-        n.processUncompletion();
-    } else {
-        n.processCompletion();
+        updateCompleteDate();
+        updateUntilDate();
     }
 }
 
 
 function timelineChanged(e) {
-    var d = e.time;
+    if (!$('#tilds-loading').hasClass('fa-refresh')) {
+        var d = e.time;
 
-    $('#tilds-loading').setLoading(true);
+        $('#tilds-loading').setLoading(true);
 
-    $.post('/seen/' +
-        (d.getFullYear()) + '/' + 
-        (d.getMonth() + 1) + '/' + 
-        (d.getDay() + 1) + '/' + 
-        $('.tild:first').text(),
+        $.post('/seen/' +
+            (d.getFullYear()) + '/' + 
+            (d.getMonth() + 1) + '/' + 
+            (d.getDay() + 1) + '/' + 
+            $('.tild:first').text(),
 
-        function(ret) {
-            if (ret.success) {
-                refreshTimeline(ret);
+            function(ret) {
+                if (ret.success) {
+                    refreshTimeline(ret);
+                } else {
+                    showError(ret.error);
+                }
+
+                $('#tilds-loading').setLoading(false);
             }
-
-            $('#tilds-loading').setLoading(false);
-        }
-    );
-}
-
-
-function timelineChange(e) {    
-    var d = $('.timeline-customtime').position().left;
-
-    $('.timeline-event').each(function() {
-        var n = $(this);
-        var percentage = (d - n.position().left) / n.width() * 100;
-
-        // Math.max(0, Math.min(100, percentage)) TODO: Change to Percentages
-        n.markCompletion(percentage < 100 ? 0 : 100);
-    });
+        );
+        
+        updateCompleteDate();
+        updateUntilDate();
+    }
 }
 
 
@@ -381,11 +438,14 @@ function initTimeline() {
         timelineChange
     );
 
+    var ts = $('.tild');
+
+    if (ts.length > 0) {
+        ts.hookupTild();
+        updateTimeline();
+    }
+
     $('.timeline-frame').addClass('drop-shadow');
-
-    $('.tild').hookupTild();
-
-    if ($('.tild').length > 0) updateTimeline();
 }
 
 google.load("visualization", "1");

@@ -3,40 +3,44 @@ from google.appengine.api import users
 from datetime import datetime, timedelta
 
 
-###########
-# ACCOUNT #
-###########
-class Account(ndb.Model):
-    user_id = ndb.StringProperty()
+########
+# USER #
+########
+
+def get_user_id():
+    return users.get_current_user().user_id()
 
 
-#################
-# ACCOUNT MODEL #
-#################
-def current_account():
-    u = users.get_current_user()
+class UserBase(ndb.Model):
+    user_id = ndb.StringProperty(default=get_user_id())
 
-    if u:
-        return Account.query(Account.user_id == u.user_id()).get().key or Account().put(user_id=u.user_id()).get().key
 
-    else:
-        return None
+class UserProfile(UserBase):
+    pass
 
-def logout_url(uri):
-    return users.create_logout_url(uri)
 
-class AccountModel(ndb.Model):
-    account = ndb.KeyProperty(kind='Account', default=current_account())
-
+class UserModel(UserBase):
     @classmethod
     def query(cls, *args, **kwds):
-        return super(AccountModel, cls).query(AccountModel.account == current_account(), *args, **kwds)
+        return super(UserModel, cls).query(UserModel.user_id == get_user_id(), *args, **kwds)
+
+
+def get_user_profile():
+    user = users.get_current_user()
+
+    if user:
+        user.profile = UserProfile.query(UserProfile.user_id == user.user_id()).get() or UserProfile().put().get()
+
+        user.is_admin = users.is_current_user_admin()
+        user.logout_url = users.create_logout_url('/')
+    
+    return user
 
 
 ##########
 # KOMPLE #
 ##########
-class Komple(AccountModel):
+class Komple(UserModel):
     tilde = ndb.KeyProperty(kind='Tilde')
 
 
@@ -215,14 +219,15 @@ class Tilde(ndb.Model):
 
 
     def process_check(self, date):
-        if self.end > date:
-            self.process_uncompletion()
+        pass
+        # if self.end > date:
+        #     self.process_uncompletion()
 
-        else:
-            self.process_completion()
+        # else:
+        #     self.process_completion()
 
-        for c in self.children():
-            c.process_check(date)
+        # for c in self.children():
+        #     c.process_check(date)
 
 
     ### PERCENTAGES ###
@@ -274,19 +279,23 @@ class Tilde(ndb.Model):
 
 
 # TODO: Convert to Class Method?
-def most_complete_date(n):
-    def _next(x):
-        if x.has_komple():
-            return x
+# def most_complete_date(n):
+#     def _next(x):
+#         if x.has_komple():
+#             return x
 
-        else:
-            t = next( (c for c in x.children().order(Tilde.start) if not c.has_komple()), None )
+#         else:
+#             t = next( (c for c in x.children().order(Tilde.start) if not c.has_komple()), None )
 
-            return _next(t) if t else x
+#             return _next(t) if t else x
 
-    tild = _next(n.get_root())
+#     x = _next(n.get_root())
 
-    return tild.end if tild.has_komple() else tild.start
+#     return x.end if x.has_komple() else x.start
+
+
+def until_date(n):
+    return n.start # PLACEHOLDER 
 
 
 def get_current_tild(tilds):

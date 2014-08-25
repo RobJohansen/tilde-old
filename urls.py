@@ -1,69 +1,76 @@
 from webapp2 import WSGIApplication, Route
-import views as v
+import views
 
 urls = [
     Route(
         r'/',
-        handler=v.Home,
+        handler=views.Home,
         name='Home'
     ),
 
     Route(
         r'/results/<query:([^/]+)?>/<tilds:([^/]+)?>',
-        handler=v.Results,
+        handler=views.Results,
         name='Results'
     ),
 
     Route(
         r'/tilds/<tilds:([^/]+)?>',
-        handler=v.Tilds,
+        handler=views.Tilds,
         name='Tilds'
     ),
 
     Route(
         r'/page/<page:([^/]+)?>/<timestamp:\d{14}>',
-        handler=v.Page,
+        handler=views.Page,
         name='Page'
     ),
 
     Route(
         r'/timeline/<tilds:([^/]+)?>',
-        handler=v.Timeline,
+        handler=views.Timeline,
         name='Timeline'
     ),
 
     Route(
         r'/derive/<id:([^/]+)?>',
-        handler=v.Derive,
+        handler=views.Derive,
         name='Derive'
     ),
 
     Route(
         r'/seen/<id:([^/]+)?>',
-        handler=v.SeenTag,
+        handler=views.SeenTag,
         name='SeenTag'
     ),
 
     Route(
         r'/seen/<year:\d{4}>/<month:\d+>/<day:\d+>/<id:([^/]+)?>',
-        handler=v.SeenTime,
+        handler=views.SeenTime,
         name='SeenTime'
+    )
+]
+
+urls_admin = [
+    Route(
+        r'/admin/',
+        handler=views.AdminConsole,
+        name='AdminConsole'
     ),
 
-
-
     Route(
-        r'/push/<id:([^/]+)?>/<title:([^/]+)?>',
-        handler=v.PushTask,
+        r'/admin/push/<id:([^/]+)?>/<title:([^/]+)?>',
+        handler=views.PushTask,
         name='PushTask'
     ),
 
     Route(
-        r'/add_show/<id:([^/]+)?>/<title:([^/]+)?>',
-        handler=v.AddShow,
+        r'/admin/add_show/<id:([^/]+)?>/<title:([^/]+)?>',
+        handler=views.AddShow,
         name='AddShow'
     )
-
 ]
 
 app = WSGIApplication(urls, debug=True)
+
+app_admin = WSGIApplication(urls_admin, debug=True)

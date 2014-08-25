@@ -73,9 +73,9 @@ function clearTilds() {
 ///////////
 // PAGES //
 ///////////
-function setPage(e, d) {
+function setPage(e, u) {
     $('#tilds-loading').setLoading(true);
-    $('#page').attr('src', d.url);
+    $('#page').attr('src', u);
 }
 
 
@@ -87,6 +87,18 @@ function pageLoaded() {
 ////////////////
 // SEARCH BOX //
 ////////////////
+function typeaheadSelected(e, d) {
+    setPage(e, d.url);
+}
+
+function typeaheadOpened(e) {
+    // $('#tilds-loading').setLoading(true);
+}
+
+function typeaheadClosed(e) {
+    // $('#tilds-loading').setLoading(false);
+}
+
 function terms_key_down(e) {
     switch (e.which) {
         // TILDE KEY
@@ -182,22 +194,26 @@ b_tilds.initialize();
 // READY //
 ///////////
 $(document).ready(function() {
-    $('#terms').keydown(terms_key_down);
-    $('#terms').typeahead(options, {
-            name        : 'terms',
-            displayKey  : 'name',
-            source      : b_terms.ttAdapter()
-        }
-    );
-    $('#terms').on('typeahead:selected', setPage);
-
-    $('#tilds').keydown(tilds_key_down);
     $('#tilds').typeahead(options, {
             name        : 'tilds',
             displayKey  : 'name',
             source      : b_tilds.ttAdapter()
         }
     );
+    $('#tilds').keydown(tilds_key_down);
+    $('#tilds').on('typeahead:opened', typeaheadOpened);
+    $('#tilds').on('typeahead:closed', typeaheadClosed);
+
+    $('#terms').typeahead(options, {
+            name        : 'terms',
+            displayKey  : 'name',
+            source      : b_terms.ttAdapter()
+        }
+    );
+    $('#terms').keydown(terms_key_down);
+    $('#terms').on('typeahead:opened', typeaheadOpened);
+    $('#terms').on('typeahead:closed', typeaheadClosed);
+    $('#terms').on('typeahead:selected', typeaheadSelected);
 
     $('#tilds-section').hide();
 

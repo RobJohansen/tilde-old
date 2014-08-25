@@ -36,3 +36,8 @@ jQuery.fn.getCursorPosition = function() {
         return sel.text.length - selLen;
     }
 };
+
+
+function showError(text) {
+    alert(text);
+}
