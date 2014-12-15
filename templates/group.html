@@ -1,0 +1,31 @@
+<div class="panel group">
+  
+  <div class="panel-heading" tag="{{ r.key.id() }}">
+    <i class="btn-grip fa fa-chevron-down"></i>
+
+    <span class="pull-right">
+      <i class="btn-edit fa fa-pencil"></i>
+
+      <i class="btn-remove fa fa-times"></i>
+    </span>
+
+    <span class="view">
+      <span class="header scheme" data-toggle="collapse" data-target="#group{{ r.key.id() }}">{{ r.name }}</span>
+    </span>
+
+    <span class="edit hide">
+      <input class="header form-control input-sm" type="text" placeholder="Name" value="{{ r.name }}" name="name" />
+    </span>
+  </div>
+
+  <div class="collapse in" id="group{{ r.key.id() }}">
+    <div class="panel-body">
+      <div class="rows inner">
+        {% for r in r.rows() %}
+          {% include "templates/structure.html" %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>

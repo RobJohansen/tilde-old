@@ -3,38 +3,101 @@ from google.appengine.api import users
 from datetime import datetime, timedelta
 
 
+############
+# ORDERING #
+############
+class OrderingBase(ndb.Model):
+    order = ndb.IntegerProperty(repeated=True)
+
+    def rows(self):
+        return [] # filter(lambda x: x, [Group.get_by_id(r) or Membership.get_by_id(r)  for r in self.order])
+
+
 ########
 # USER #
 ########
 
-def get_user_id():
-    return users.get_current_user().user_id()
-
-
-class UserBase(ndb.Model):
-    user_id = ndb.StringProperty(default=get_user_id())
-
-
-class UserProfile(UserBase):
+class UserProfile(OrderingBase):
     pass
 
 
-class UserModel(UserBase):
+class UserModel(ndb.Model):
     @classmethod
-    def query(cls, *args, **kwds):
-        return super(UserModel, cls).query(UserModel.user_id == get_user_id(), *args, **kwds)
+    def __user_key(self):
+        return ndb.Key(UserProfile, users.get_current_user().user_id())
+
+    def __init__(cls, **kwargs):
+        return super(UserModel, cls).__init__(parent=UserModel.__user_key(), **kwargs)
+
+    @classmethod
+    def get_by_id(cls, id, **kwargs):
+        return super(UserModel, cls).get_by_id(id, parent=UserModel.__user_key(), **kwargs)
+
+    @classmethod
+    def query(cls, *args, **kwargs):
+        return super(UserModel, cls).query(ancestor=UserModel.__user_key(), *args, **kwargs)
 
 
 def get_user_profile():
+    return UserProfile.get_or_insert(users.get_current_user().user_id())
+
+
+def get_user_account():
     user = users.get_current_user()
 
     if user:
-        user.profile = UserProfile.query(UserProfile.user_id == user.user_id()).get() or UserProfile().put().get()
+        user.profile = get_user_profile()
 
         user.is_admin = users.is_current_user_admin()
         user.logout_url = users.create_logout_url('/')
     
     return user
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+########
+# USER #
+########
+
+# def get_user_id():
+#     return users.get_current_user().user_id()
+
+
+# class UserBase(ndb.Model):
+#     user_id = ndb.StringProperty(default=get_user_id())
+
+
+# class UserProfile(UserBase):
+#     pass
+
+
+# class UserModel(UserBase):
+#     @classmethod
+#     def query(cls, *args, **kwds):
+#         return super(UserModel, cls).query(UserModel.user_id == get_user_id(), *args, **kwds)
+
+
+# def get_user_profile():
+#     user = users.get_current_user()
+
+#     if user:
+#         user.profile = UserProfile.query(UserProfile.user_id == user.user_id()).get() or UserProfile().put().get()
+
+#         user.is_admin = users.is_current_user_admin()
+#         user.logout_url = users.create_logout_url('/')
+    
+#     return user
 
 
 ##########

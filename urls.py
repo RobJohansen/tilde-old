@@ -48,6 +48,12 @@ urls = [
         r'/seen/<year:\d{4}>/<month:\d+>/<day:\d+>/<id:([^/]+)?>',
         handler=views.SeenTime,
         name='SeenTime'
+    ),
+
+    Route(
+        r'/user',
+        handler=views.User,
+        name='User'
     )
 ]
 

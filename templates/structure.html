@@ -1,0 +1,5 @@
+{% if r.key.kind() == 'Membership' %}
+  {% include "templates/row.html" %}
+{% else %}
+  {% include "templates/group.html" %}
+{% endif %}

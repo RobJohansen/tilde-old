@@ -1,8 +1,61 @@
+/* MENU */
+#menu {
+  float:              right;
+  position:           relative;
+  top:                -90px;
+  left:               -30px;
+}
+
+#menu i {
+  color:              rgb(150, 150, 150);
+  font-size:          25px;
+  opacity:            1 !important;
+}
+
+#menu .btn {
+  height:             35px;
+  width:              35px;
+  opacity:            0.8;
+  background-color:   rgb(255, 255, 255);
+  border:             1px solid rgb(200, 200, 200);
+  padding:            5px;
+  border-radius:      0px !important;
+}
+
+#menu .btn:hover {
+  cursor:             pointer;
+  color:              rgb(200, 200, 200);
+  opacity:            1 !important;
+}
+
+#menu ul {
+  margin-top:         15px;
+  border-radius:      0px !important;
+}
+
+
 /* PAGE */
 #page {
   width:              100%;
   height:             100%;
   border:             none;
+}
+
+#empty {
+  text-align:         center;
+  position:           fixed;
+  top:                50%;
+  left:               50%;
+  transform:          translate(-50%, -50%);
+  line-height:        30px !important;
+  color:              rgb(200, 200, 200);
+  cursor:             pointer;
+  font-size:          180px;
+}
+
+#empty:hover {
+  color:              rgb(180, 180, 180);
+  text-decoration:    none;
 }
 
 

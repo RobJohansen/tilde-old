@@ -75,7 +75,13 @@ function clearTilds() {
 ///////////
 function setPage(e, u) {
     $('#tilds-loading').setLoading(true);
-    $('#page').attr('src', u);
+    if (u == null) {
+        $('#page').attr('src', u);
+        $('#empty').show();
+    } else {
+        $('#page').attr('src', u);
+        $('#empty').hide();
+    }
 }
 
 
