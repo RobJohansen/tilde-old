@@ -1,9 +1,33 @@
+#date {
+  text-align:         center;
+  position:           relative;
+  top:                -5px;
+  z-index:            -1;
+}
+
+#date > span {
+  background-color:   lime;
+  border-radius:      5px;
+  border:             1px solid gray;
+  padding:            10px 20px;
+  font-weight:        bold;
+}
+
+#date {
+  color:              rgb(125, 125, 125);
+}
+
+#date:hover {
+  color:              rgb(0, 0, 0);
+  cursor:             pointer;
+}
+
+
 /* MENU */
 #menu {
-  float:              right;
-  position:           relative;
-  top:                -90px;
-  left:               -30px;
+  position:           absolute;
+  left:               10px;
+  top:                10px;
 }
 
 #menu i {
@@ -41,57 +65,28 @@
   border:             none;
 }
 
-#empty {
+#page-loading {
+  background:         rgba(255,255,255,0.8);
   text-align:         center;
   position:           fixed;
-  top:                50%;
-  left:               50%;
-  transform:          translate(-50%, -50%);
-  line-height:        30px !important;
-  color:              rgb(200, 200, 200);
-  cursor:             pointer;
-  font-size:          180px;
+  width:              100%;
+  height:             100%;
+  z-index:            100;
 }
 
-#empty:hover {
-  color:              rgb(180, 180, 180);
-  text-decoration:    none;
+#page-loading i {
+  color:              rgb(200, 200, 200);
+  position:           fixed;
+  top:                50%;
+  font-size:          80px;
 }
 
 
 /* SEARCH BOX */
-.tilde {
-  float:              left;
-  line-height:        35px !important;
-  font-size:          24px;
-  width:              14px;
-  color:              rgb(0, 100, 255);
-}
-
-.tild {
-  display:            inline-block;
-  position:           relative;
-  line-height:        35px;
-  top:                -12px;
-  color:              rgb(0, 100, 255);
-}
-
-.tild .fa {
-  font-size:          16px;
-  width:              14px;
-}
-
-.tild:hover,
-.tild.focus {
-  cursor:             pointer;
-  background-color:   rgb(0, 70, 130) !important;
-  color:              rgb(75, 185, 240) !important;
-}
-
 #search {
   background-color:   white;
   position:           absolute;
-  left:               10px;
+  left:               50px;
   top:                10px;
   height:             35px;
   line-height:        35px;
@@ -100,10 +95,24 @@
   opacity:            0.8;
 }
 
+#search #domain {
+  float:              left;
+}
+
+#search #domain img {
+  width:              20px;
+}
+
+#search #domain > span {
+  border:             none;
+  width:              40px;
+}
+
 #tilds-loading {
   position:           absolute;
-  left:               390px;
+  left:               430px;
   top:                20px;
+  z-index:            100;
 }
 
 #terms {
@@ -132,8 +141,45 @@
   margin-left:        -10px;
 }
 
+.tilde {
+  float:              left;
+  line-height:        35px !important;
+  font-size:          24px;
+  width:              14px;
+  color:              rgb(0, 100, 255);
+}
+
+.tild {
+  display:            inline-block;
+  position:           relative;
+  line-height:        35px;
+  color:              rgb(0, 100, 255);
+}
+
+.tild .fa {
+  font-size:          16px;
+  width:              14px;
+}
+
+.tild:hover,
+.tild.focus {
+  cursor:             pointer;
+  background-color:   rgb(0, 70, 130) !important;
+  color:              rgb(75, 185, 240) !important;
+}
+
+
 
 /* TYPEAHEAD */
+#search > .twitter-typeahead {
+  display: inline !important;
+  float: left;
+}
+
+#search > .twitter-typeahead > input {
+  left: inherit !important;
+}
+
 .twitter-typeahead .tt-hint {
   display:            block;
   height:             35px;
@@ -162,4 +208,30 @@
   cursor:             pointer;
   background-color:   rgb(0, 70, 130) !important;
   color:              rgb(75, 185, 240) !important;
+}
+
+
+
+
+
+
+#empty {
+  text-align:         center;
+  position:           fixed;
+  top:                50%;
+  left:               50%;
+  transform:          translate(-50%, -50%);
+  line-height:        30px !important;
+  color:              rgb(200, 200, 200);
+  cursor:             pointer;
+  font-size:          180px;
+}
+
+#empty:hover {
+  color:              rgb(180, 180, 180);
+  text-decoration:    none;
+}
+
+.wiki-tilde-tilde {
+  font-size:          50px;
 }

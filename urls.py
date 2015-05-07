@@ -3,28 +3,51 @@ import views
 
 urls = [
     Route(
-        r'/',
-        handler=views.Home,
-        name='Home'
+        r'/page/empty',
+        handler=views.PageEmpty,
+        name='PageEmpty'
     ),
 
     Route(
-        r'/results/<query:([^/]+)?>/<tilds:([^/]+)?>',
+        r'/page/<page_id:([^/]+)?>',
+        handler=views.PageDefault,
+        name='PageDefault'
+    ),
+
+    Route(
+        r'/page/<page_id:([^/]+)?>/<timestamp:\d{14}>',
+        handler=views.Page,
+        name='Page'
+    ),
+
+
+
+    Route(
+        r'/results/<terms:([^/]+)?>/<tilds:([^/]+)?>',
         handler=views.Results,
         name='Results'
     ),
 
     Route(
-        r'/tilds/<tilds:([^/]+)?>',
-        handler=views.Tilds,
-        name='Tilds'
+        r'/json_tilds/<tilds:([^/]+)?>',
+        handler=views.JsonTilds,
+        name='JsonTilds'
     ),
 
+
+
+
+
     Route(
-        r'/page/<page:([^/]+)?>/<timestamp:\d{14}>',
-        handler=views.Page,
-        name='Page'
+        r'/',
+        handler=views.Home,
+        name='Home'
     ),
+
+
+
+
+
 
     Route(
         r'/timeline/<tilds:([^/]+)?>',

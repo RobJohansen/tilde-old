@@ -5,7 +5,7 @@ var timeline;
 // LINE STYLE //
 ////////////////
 var ItemLine = function (data, options) {
-  links.Timeline.Item.call(this, data, options);
+    links.Timeline.Item.call(this, data, options);
 };
 
 ItemLine.prototype = new links.Timeline.Item();
@@ -245,17 +245,19 @@ function refreshTimeline(options) {
     $('.timeline-event-button').unbind('click', timelineEventMarked);
     $('.timeline-event-title').unbind('click', timelineEventSelected);
 
-    if (options.min && options.max) {
-        timeline.setVisibleChartRange(new Date(options.min), new Date(options.max));
-    }
-
     timeline.redraw();
 
     $('.timeline-event-button').click(timelineEventMarked);
     $('.timeline-event-title').click(timelineEventSelected);
+
+    if (options.min && options.max) {
+        timeline.setVisibleChartRange(new Date(options.min), new Date(options.max));
+    }
 }
 
 function timelineChange(e) {
+    setDate(e.time.toDateString());
+
     var d = $('.timeline-customtime').position().left;
 
     $('.timeline-event').each(function() {
@@ -309,8 +311,8 @@ function updateTimeline() {
             if (ret.success) {
                 timeline.draw(new google.visualization.DataTable(ret.data, 0.6));
 
-                updateCompleteDate();
-                updateUntilDate();
+                // updateCompleteDate();
+                // updateUntilDate();
 
                 refreshTimeline(ret);
             } else {
@@ -378,31 +380,31 @@ function timelineEventMarked() {
 
 
 function timelineChanged(e) {
-    if (!$('#tilds-loading').hasClass('fa-refresh')) {
-        var d = e.time;
+    // if (!$('#tilds-loading').hasClass('fa-refresh')) {
+    //     var d = e.time;
 
-        $('#tilds-loading').setLoading(true);
+    //     $('#tilds-loading').setLoading(true);
 
-        $.post('/seen/' +
-            (d.getFullYear()) + '/' + 
-            (d.getMonth() + 1) + '/' + 
-            (d.getDay() + 1) + '/' + 
-            $('.tild:first').text(),
+    //     $.post('/seen/' +
+    //         (d.getFullYear()) + '/' + 
+    //         (d.getMonth() + 1) + '/' + 
+    //         (d.getDay() + 1) + '/' + 
+    //         $('.tild:first').text(),
 
-            function(ret) {
-                if (ret.success) {
-                    refreshTimeline(ret);
-                } else {
-                    showError(ret.error);
-                }
+    //         function(ret) {
+    //             if (ret.success) {
+    //                 refreshTimeline(ret);
+    //             } else {
+    //                 showError(ret.error);
+    //             }
 
-                $('#tilds-loading').setLoading(false);
-            }
-        );
+    //             $('#tilds-loading').setLoading(false);
+    //         }
+    //     );
         
-        updateCompleteDate();
-        updateUntilDate();
-    }
+    //     updateCompleteDate();
+    //     updateUntilDate();
+    // }
 }
 
 

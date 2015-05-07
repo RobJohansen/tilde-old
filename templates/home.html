@@ -33,8 +33,47 @@
     <!-- Timeline -->
     <div id="timeline"></div>
 
+    <div id="date">
+      <span class="drop-shadow">
+        <span id="date-text">29 Nov 2014</span>
+        &nbsp;
+        <i class="fa fa-undo"></i>
+      </span>
+    </div>
+
+    <!-- Menu -->
+    <div id="menu">
+      <span class="dropdown">
+        <span class="btn drop-shadow dropdown-toggle" data-toggle="dropdown">
+          <i class="fa fa-gear" class=""></i>
+        </span>
+
+        <ul class="dropdown-menu drop-shadow dropdown-menu-left" role="menu">
+          <li class="dropdown-header">{{ user.nickname() }}</li>
+          <li><a href="#">Settings</a></li>
+          <li role="presentation" class="divider"></li>
+          {% if user.is_admin %}
+            <li><a href="/admin/">Admin Console</a></li>
+          {% endif %}
+          <li><a href="{{ user.logout_url }}">Logout</a></li>
+        </ul>
+      </span>
+    </div>
+
     <!-- Search Box -->
+    <i id="tilds-loading" class="fa"></i>
+
     <div id="search" class="drop-shadow">
+      <span id="domain" class="dropdown">
+        <span class="btn dropdown-toggle" data-toggle="dropdown">
+          <img id="domain-logo" src="img/wikipedia.ico" /> <span class="caret"></span>
+        </span>
+
+        <ul class="dropdown-menu dropdown-menu-left" role="menu">
+          <li><img src="img/wikipedia.ico" /></li>
+        </ul>
+      </span>
+
       <input id="terms" type="text" class="form-control" autocomplete="off" />
 
       {%- for t in tilds -%}
@@ -48,36 +87,11 @@
       </span>
     </div>
 
-    <i id="tilds-loading" class="fa"></i>
-  
-    <!-- Menu -->
-    <div id="menu">
-      <span class="btn drop-shadow">
-        <i class="fa fa-user"></i>
-      </span>
-
-      &nbsp; &nbsp;
-
-      <span class="dropdown">
-        <span class="btn drop-shadow dropdown-toggle"  data-toggle="dropdown">
-          <i class="fa fa-gear" class=""></i>
-        </span>
-
-        <ul class="dropdown-menu drop-shadow dropdown-menu-right" role="menu">
-          <li class="dropdown-header">{{ user.nickname() }}</li>
-          <li><a href="#">Settings</a></li>
-          <li role="presentation" class="divider"></li>
-          {% if user.is_admin %}
-            <li><a href="/admin/">Admin Console</a></li>
-          {% endif %}
-          <li><a href="{{ user.logout_url }}">Logout</a></li>
-        </ul>
-      </span>
-    </div>
-
     <!-- Page -->
-    <iframe id="page"></iframe>
+    <span id="page-loading">
+      <i class="fa fa-refresh fa-spin"></i>
+    </span>
 
-    <span id="empty">~</div>
+    <iframe id="page" src="/page/empty"></iframe>
   </body>
 </html>

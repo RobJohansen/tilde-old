@@ -78,36 +78,69 @@ class AdminConsole(RequestHandler):
 # VIEWS : BLOODHOUND #
 ######################
 class Results(RequestHandler):
-    def get(self, query, tilds):
-        context = { }
+    def get(self, terms, tilds):
+        context = { 'success' : True }
 
         try:
             timestamp = models.get_timestamp(tilds)
 
-            context = pages.search_wiki(query, timestamp)
+            results = pages.search_wiki(terms, timestamp)
 
-        except Exception:
-            pass
+            if len(results) == 1:
+                self.redirect(results[0]['url'])
+
+            context['results'] = results
+
+        except Exception as e:
+            context['success'] = False
+            context['error'] = str(e)
 
         finally:
-            json_response(self, context)
+            render_with_context(self, 'results.html', context)
 
 
-class Tilds(RequestHandler):
+class JsonTilds(RequestHandler):
     def get(self, tilds):
-        context = { }
+        context = { 'success' : True }
 
         try:
             timestamp = models.get_timestamp(tilds)
 
             context = models.get_next_tilds(tilds)
 
-        except Exception:
-            pass
+        except Exception as e:
+            context['success'] = False
+            context['error'] = str(e)
 
         finally:
             json_response(self, context)
             
+
+################
+# VIEWS : HTML #
+################
+
+class PageDefault(RequestHandler):
+    def get(self, page_id):
+        t = pages.fetch_wiki(page_id)
+
+        self.response.out.write(t)
+
+class Page(RequestHandler):
+    def get(self, page_id, timestamp):
+        t = pages.fetch_wiki(page_id, timestamp)
+
+        self.response.out.write(t)
+
+
+class PageEmpty(RequestHandler):
+    def get(self):
+        context = { }
+
+        render_with_context(self, 'empty.html', context)
+
+
+
 
 ################
 # VIEWS : JSON #
@@ -134,13 +167,13 @@ class Timeline(RequestHandler):
                 results = [n.to_calendar_node(level=l) for (n, l) in results]
 
                 # UNTIL DATE PLACEHOLDER
-                results.append({
-                    'start'         : results[0]['start'],
-                    'end'           : None,
-                    'group'         : None,
-                    'content'       : None,
-                    'className'     : None
-                })
+                # results.append({
+                #     'start'         : results[0]['start'],
+                #     'end'           : None,
+                #     'group'         : None,
+                #     'content'       : None,
+                #     'className'     : None
+                # })
 
                 # BOUNDARIES
                 # diff = max((n.end - n.start) / 10, timedelta(days=1))
@@ -228,14 +261,6 @@ class SeenTime(RequestHandler):
             json_response(self, context)
 
 
-################
-# VIEWS : HTML #
-################
-class Page(RequestHandler):
-    def get(self, page, timestamp):
-        t = pages.fetch_wiki(page, timestamp)
-
-        self.response.out.write(t)
 
 
 

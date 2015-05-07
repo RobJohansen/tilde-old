@@ -10,10 +10,10 @@ div.timeline-event-content {
 div.timeline-event {
   cursor:               pointer;
   float:                left;
-  font-size:            12px !important;
+  font-size:            20px !important;
   line-height:          1;
   border-radius:        0;
-  border:               1px solid rgb(125, 125, 125);
+  border:               none; /*1px solid rgb(125, 125, 125);*/
   background-color:     rgb(216, 216, 216);
   /*min-width:            25px;   TODO : BETTER WAY TO HANDLE THIS;*/
 }
