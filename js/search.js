@@ -70,13 +70,38 @@ function clearTilds() {
 }
 
 
-function setDate(date) {
-    $('#date').hide();
+var date_animating = 0;
 
-    if (date != null) {
-        $('#date').show();
-        $('#date-text').text(date);
+function setDate(date) {
+    $('#date-text').text(date.toDateString());
+
+    if (date == null || date.getDate() >= timeline.getCurrentTime().getDate()) {
+        if (date_animating != -1) {
+            date_animating = -1;
+
+            $('#date').stop().clearQueue().animate({
+                'top' : '0px'
+            }, function() {
+                date_animating = 0;
+            });
+        }
+    } else {
+        if (date_animating != 1) {
+            date_animating = 1;
+
+            $('#date').stop().clearQueue().animate({
+                'top' : '95px'
+            }, function() {
+                date_animating = 0;
+            });
+        }
     }
+}
+
+
+function resetDate() {
+    timeline.setCustomTime(timeline.getCurrentTime());
+    setDate(timeline.getCurrentTime());
 }
 
 
@@ -136,7 +161,7 @@ function terms_key_down(e) {
     }
 
     if ($('#terms').val().length > 2) {
-        setPage('/results/' + $('#terms').val() + '/' + $('.tild').text());
+        setPage('/page/' + $('#terms').val() + '/' + $('.tild').text());
     }
 
     $('.tild.focus').toggleFocusTild();
@@ -199,9 +224,9 @@ var b_tilds = new Bloodhound({
     datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
     queryTokenizer: Bloodhound.tokenizers.whitespace,
     remote: {
-        url : '/json_results_tilds',
+        url : '/tilds',
         replace : function() {
-            return '/json_tilds/' + $('.tild').text();
+            return '/tilds/' + $('.tild').text();
         }
     }
 });
@@ -239,5 +264,5 @@ $(document).ready(function() {
 
     $('#page').load(pageLoaded);
 
-    setDate();
+    $('#date').click(resetDate);
 });

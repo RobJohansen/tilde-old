@@ -1,8 +1,8 @@
 #date {
   text-align:         center;
-  position:           relative;
-  top:                -5px;
-  z-index:            -1;
+  position:           fixed;
+  width:              100%;
+  color:              rgb(125, 125, 125);
 }
 
 #date > span {
@@ -13,11 +13,7 @@
   font-weight:        bold;
 }
 
-#date {
-  color:              rgb(125, 125, 125);
-}
-
-#date:hover {
+#date > span:hover {
   color:              rgb(0, 0, 0);
   cursor:             pointer;
 }
@@ -208,30 +204,4 @@
   cursor:             pointer;
   background-color:   rgb(0, 70, 130) !important;
   color:              rgb(75, 185, 240) !important;
-}
-
-
-
-
-
-
-#empty {
-  text-align:         center;
-  position:           fixed;
-  top:                50%;
-  left:               50%;
-  transform:          translate(-50%, -50%);
-  line-height:        30px !important;
-  color:              rgb(200, 200, 200);
-  cursor:             pointer;
-  font-size:          180px;
-}
-
-#empty:hover {
-  color:              rgb(180, 180, 180);
-  text-decoration:    none;
-}
-
-.wiki-tilde-tilde {
-  font-size:          50px;
 }

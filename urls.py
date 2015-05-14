@@ -2,47 +2,59 @@ from webapp2 import WSGIApplication, Route
 import views
 
 urls = [
+
+    # Route(
+    #     r'/dummy/<terms:([^/]+)?>/<tilds:([^/]+)?>',
+    #     handler=views.DummyPage,
+    #     name='DummyPage'
+    # ),
+
     Route(
-        r'/page/empty',
-        handler=views.PageEmpty,
-        name='PageEmpty'
+        r'/<terms:([^/]+)?>/<tilds:([^/]+)?>',
+        handler=views.Demo,
+        name='Demo'
     ),
 
     Route(
-        r'/page/<page_id:([^/]+)?>',
-        handler=views.PageDefault,
-        name='PageDefault'
+        r'/',
+        handler=views.DemoHome,
+        name='DemoHome'
     ),
 
+
+
+
+
+
     Route(
-        r'/page/<page_id:([^/]+)?>/<timestamp:\d{14}>',
+        r'/p/<terms:([^/]+)?>/<tilds:([^/]+)?>',
         handler=views.Page,
         name='Page'
     ),
 
 
 
-    Route(
-        r'/results/<terms:([^/]+)?>/<tilds:([^/]+)?>',
-        handler=views.Results,
-        name='Results'
-    ),
 
     Route(
-        r'/json_tilds/<tilds:([^/]+)?>',
-        handler=views.JsonTilds,
-        name='JsonTilds'
+        r'/p/',
+        handler=views.PageEmpty,
+        name='PageEmpty'
     ),
 
 
 
-
-
     Route(
-        r'/',
-        handler=views.Home,
-        name='Home'
+        r'/t/<tilds:([^/]+)?>',
+        handler=views.Tilds,
+        name='Tilds'
     ),
+
+
+    # Route(
+    #     r'/',
+    #     handler=views.Home,
+    #     name='Home'
+    # ),
 
 
 

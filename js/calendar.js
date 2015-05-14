@@ -256,7 +256,7 @@ function refreshTimeline(options) {
 }
 
 function timelineChange(e) {
-    setDate(e.time.toDateString());
+    setDate(e.time);
 
     var d = $('.timeline-customtime').position().left;
 

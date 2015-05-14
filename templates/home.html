@@ -31,8 +31,6 @@
 
   <body>
     <!-- Timeline -->
-    <div id="timeline"></div>
-
     <div id="date">
       <span class="drop-shadow">
         <span id="date-text">29 Nov 2014</span>
@@ -41,6 +39,9 @@
       </span>
     </div>
 
+    <div id="timeline"></div>
+
+
     <!-- Menu -->
     <div id="menu">
       <span class="dropdown">
@@ -48,7 +49,7 @@
           <i class="fa fa-gear" class=""></i>
         </span>
 
-        <ul class="dropdown-menu drop-shadow dropdown-menu-left" role="menu">
+        <ul class="dropdown-menu drop-shadow" role="menu">
           <li class="dropdown-header">{{ user.nickname() }}</li>
           <li><a href="#">Settings</a></li>
           <li role="presentation" class="divider"></li>
@@ -69,7 +70,7 @@
           <img id="domain-logo" src="img/wikipedia.ico" /> <span class="caret"></span>
         </span>
 
-        <ul class="dropdown-menu dropdown-menu-left" role="menu">
+        <ul class="dropdown-menu" role="menu">
           <li><img src="img/wikipedia.ico" /></li>
         </ul>
       </span>
@@ -92,6 +93,6 @@
       <i class="fa fa-refresh fa-spin"></i>
     </span>
 
-    <iframe id="page" src="/page/empty"></iframe>
+    <iframe id="page" src="{{ empty_page_url }}"></iframe>
   </body>
 </html>

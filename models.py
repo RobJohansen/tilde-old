@@ -3,6 +3,104 @@ from google.appengine.api import users
 from datetime import datetime, timedelta
 
 
+
+DATE_FORMAT = '%Y%m%d'
+
+TIME_FORMAT = '%H%M%S'
+
+
+###########
+# HELPERS #
+###########
+
+def get_current_tild(tilds):
+    try:
+        ts = tilds.split('~')
+
+        n = Tilde.get_by_id(ts[1])
+
+        for (t, l) in zip(ts[2:], n.label.get().tag[1:]):
+            for c in n.children():
+                if c.verbose() == t:
+                    n = c
+
+        return n
+
+    except Exception:
+        return None
+        
+
+def get_current_timestamp(tilds):
+    try:
+        return datetime.strptime(tilds, DATE_FORMAT).strftime(DATE_FORMAT) + '010101'
+
+    except Exception:
+        try:
+            return datetime.strptime(tilds, DATE_FORMAT + TIME_FORMAT).strftime(DATE_FORMAT + TIME_FORMAT)
+
+        except Exception:
+            try:
+                return get_current_tild(tilds).start.strftime(DATE_FORMAT + TIME_FORMAT)
+
+            except Exception:
+                return None
+
+
+def get_next_tilds(tilds):
+    t = get_current_tild(tilds)
+
+    if t:
+        results = t.children()
+
+    else:
+        results = Tilde.query(Tilde.label != None).order(Tilde.label)
+
+    return map(lambda x: {'name' : x.verbose() }, results.order(Tilde.tag))
+
+
+
+
+# TODO: Convert to Class Method?
+# def most_complete_date(n):
+#     def _next(x):
+#         if x.has_komple():
+#             return x
+
+#         else:
+#             t = next( (c for c in x.children().order(Tilde.start) if not c.has_komple()), None )
+
+#             return _next(t) if t else x
+
+#     x = _next(n.get_root())
+
+#     return x.end if x.has_komple() else x.start
+
+
+def until_date(n):
+    return n.start # PLACEHOLDER 
+
+
+
+
+
+
+
+def derive_tilds(id):
+    m = Tilde.get_by_id(id) or Tilde.get_by_id(long(id))
+
+    tilds = [m]
+
+    while m.ancestor:
+        m = m.ancestor.get()
+        tilds.append(m)
+
+    tilds = map(lambda x: x.verbose(), tilds)
+
+    return tilds[::-1]
+
+
+
+
 ############
 # ORDERING #
 ############
@@ -331,89 +429,3 @@ class Tilde(ndb.Model):
         return 0
 
         # return self.children().count()
-
-
-
-
-
-###########
-# HELPERS #
-###########
-
-
-# TODO: Convert to Class Method?
-# def most_complete_date(n):
-#     def _next(x):
-#         if x.has_komple():
-#             return x
-
-#         else:
-#             t = next( (c for c in x.children().order(Tilde.start) if not c.has_komple()), None )
-
-#             return _next(t) if t else x
-
-#     x = _next(n.get_root())
-
-#     return x.end if x.has_komple() else x.start
-
-
-def until_date(n):
-    return n.start # PLACEHOLDER 
-
-
-def get_current_tild(tilds):
-    tild = None
-
-    if not tilds == '':
-        ts = tilds.split('~')
-
-        try:
-            tild = Tilde.get_by_id(ts[1])
-
-            for (t, l) in zip(ts[2:], tild.label.get().tag[1:]):
-                for c in tild.children():
-                    if c.verbose() == t:
-                        tild = c
-
-        except Exception:
-            pass
-
-    return tild
-
-
-def get_next_tilds(tilds):
-    t = get_current_tild(tilds)
-
-    if t:
-        results = t.children()
-
-    else:
-        results = Tilde.query(Tilde.label != None).order(Tilde.label)
-
-    return map(lambda x: {'name' : x.verbose() }, results.order(Tilde.tag))
-
-
-def get_timestamp(tilds):
-    t = get_current_tild(tilds)
-
-    if t:
-        timestamp = t.start
-
-    else:
-        timestamp = datetime.now()
-
-    return timestamp.strftime('%Y%m%d%H%M%S')
-
-
-def derive_tilds(id):
-    m = Tilde.get_by_id(id) or Tilde.get_by_id(long(id))
-
-    tilds = [m]
-
-    while m.ancestor:
-        m = m.ancestor.get()
-        tilds.append(m)
-
-    tilds = map(lambda x: x.verbose(), tilds)
-
-    return tilds[::-1]

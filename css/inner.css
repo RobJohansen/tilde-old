@@ -1,0 +1,20 @@
+#empty-tilde {
+  text-align:         center;
+  position:           fixed;
+  top:                50%;
+  left:               50%;
+  transform:          translate(-50%, -50%);
+  line-height:        30px !important;
+  color:              rgb(200, 200, 200);
+  cursor:             pointer;
+  font-size:          180px;
+}
+
+#empty-tilde:hover {
+  color:              rgb(180, 180, 180);
+  text-decoration:    none;
+}
+
+.wiki-tilde-tilde {
+  font-size:          50px;
+}

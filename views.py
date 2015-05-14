@@ -5,32 +5,36 @@ from datetime import datetime, timedelta, date
 import jinja2
 import os
 import json
+import logging
 
 import models
-import pages
+import views_page
 
 
 ###########
 # HELPERS #
 ###########
-J_ENV = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
 
 
-def render_to_string(filename, context):
-    template = J_ENV.get_template('templates/' + filename)
+def render_to_string(filename, context={ }):
+    env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
+
+    template = env.get_template(filename)
+
     return template.render(context)
 
 
-def render_with_context(self, filename, context):
+def render_with_context(self, filename, context={ }):
     from google.appengine.api import users
 
     context.update({
-        'user'          : models.get_user_account()
+        'user'              : models.get_user_account(),
+        'empty_page_url'    : ''#uri_for('PageEmpty')
     })
 
-    template = J_ENV.get_template('templates/' + filename)
-    self.response.out.write(template.render(context))
+    output = render_to_string('templates/' + filename, context)
+
+    self.response.out.write(output)
 
 
 def json_response(self, context):
@@ -40,6 +44,102 @@ def json_response(self, context):
 
 def json_date(d):
     return d.strftime("%Y-%m-%d")
+
+
+
+
+
+
+
+
+
+
+
+
+# class DummyPage(RequestHandler):
+#     def get(self, terms, tilds=None):
+#         context = {
+#             'terms'     : terms,
+#             'tilds'     : tilds,
+#             'date'      : '2015-10-01'
+#         }
+
+#         content = '' #render_to_string('templates/dummy_page.html', context)
+
+#         context.update({
+#             'content'   : content,
+#         })
+
+#         json_response(self, context)
+
+
+class Demo(RequestHandler):
+    def get(self, terms, tilds=None):
+        timestamp = models.get_current_timestamp(tilds)
+
+        context = {
+            'terms'     : terms,
+            'tilds'     : tilds,
+            'date'      : timestamp
+        }
+
+        render_with_context(self, 'demo.html', context)
+
+
+class DemoHome(RequestHandler):
+    def get(self):
+        render_with_context(self, 'demo.html', { })
+
+
+################
+# VIEWS : HTML #
+################
+
+class Page(RequestHandler):
+    def get(self, terms, tilds=None):
+        timestamp = models.get_current_timestamp(tilds)
+
+        results = views_page.search(terms, timestamp)
+
+        logging.debug('PageRender : timestamp = ' + str(timestamp) + ' : results = ' + str(len(results)))
+
+        context = {
+            'terms' : terms,
+            'tilds' : tilds
+        }
+
+        if len(results) == 1:
+            content = views_page.render(**results[0])
+
+        else:
+            content = render_to_string('templates/page_results.html', {
+                'results'   : results,
+                'terms'     : terms
+            })
+            
+        context.update({
+            'content'   : content
+        })
+
+        json_response(self, context)
+
+
+class PageEmpty(RequestHandler):
+    def get(self):
+        render_with_context(self, 'page_empty.html')
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #####################
@@ -74,71 +174,16 @@ class AdminConsole(RequestHandler):
         render_with_context(self, 'admin.html', context)
 
 
+
 ######################
 # VIEWS : BLOODHOUND #
 ######################
-class Results(RequestHandler):
-    def get(self, terms, tilds):
-        context = { 'success' : True }
-
-        try:
-            timestamp = models.get_timestamp(tilds)
-
-            results = pages.search_wiki(terms, timestamp)
-
-            if len(results) == 1:
-                self.redirect(results[0]['url'])
-
-            context['results'] = results
-
-        except Exception as e:
-            context['success'] = False
-            context['error'] = str(e)
-
-        finally:
-            render_with_context(self, 'results.html', context)
-
-
-class JsonTilds(RequestHandler):
+class Tilds(RequestHandler):
     def get(self, tilds):
-        context = { 'success' : True }
+        context = models.get_next_tilds(tilds)
 
-        try:
-            timestamp = models.get_timestamp(tilds)
-
-            context = models.get_next_tilds(tilds)
-
-        except Exception as e:
-            context['success'] = False
-            context['error'] = str(e)
-
-        finally:
-            json_response(self, context)
+        json_response(self, context)
             
-
-################
-# VIEWS : HTML #
-################
-
-class PageDefault(RequestHandler):
-    def get(self, page_id):
-        t = pages.fetch_wiki(page_id)
-
-        self.response.out.write(t)
-
-class Page(RequestHandler):
-    def get(self, page_id, timestamp):
-        t = pages.fetch_wiki(page_id, timestamp)
-
-        self.response.out.write(t)
-
-
-class PageEmpty(RequestHandler):
-    def get(self):
-        context = { }
-
-        render_with_context(self, 'empty.html', context)
-
 
 
 
