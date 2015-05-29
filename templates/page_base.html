@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>{{ title }}</title>
+    <title url="{{ url }}">{{ title }}</title>
 
     <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
 
@@ -84,10 +84,10 @@
 
     <div id="search">
 
-      <input id="terms" type="text" key="{{ terms }}" value="{{ terms_v }}" />
-      <input id="tilds" type="text" key="{{ tilds }}" value="{{ tilds_v }}" />
+      <input id="terms" type="text" key="{{ state.terms_k }}" value="{{ state.terms_v }}" />
+      <input id="tilds" type="text" key="{{ state.tilds_k }}" value="{{ state.tilds_v }}" />
 
-      <span id="timestamp" key="{{ timestamp }}">{{ timestamp_v }}</span>
+      <span id="timestamp" key="{{ state.timestamp_k }}">{{ state.timestamp_v }}</span>
 
     </div>
 
@@ -97,8 +97,8 @@
         <i class="fa fa-refresh fa-spin"></i>
       </span>
 
-      <div id="page-content">
-        {{ content }}
+      <div id="page-content" render="{{ state.render_url }}">
+        {{ state.content }}
       </div>
     </div>
 

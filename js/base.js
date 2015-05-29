@@ -39,48 +39,41 @@ function url(name) {
 }
 
 
-function syncState(is_update) {
-  $('#page-loading').show();
+function syncState(is_update, title, url) {
+  if (title == undefined) {
+    var title = $('title').html();
+    var url = $('title').attr('url');
+  }
 
-  $.get(url('page'),
-    function(c) {
-      if (c.error) {
+  var state = {
+    'terms_k'     : $('#terms').getKey(),
+    'terms_v'     : $('#terms').val(),
 
-        alert(c.error);
+    'tilds_k'     : $('#tilds').getKey(),
+    'tilds_v'     : $('#tilds').val(),
 
-      } else {
+    'timestamp_k' : $('#timestamp').getKey(),
+    'timestamp_v' : $('#timestamp').val(),
 
-        uiRender(c.state);
+    'render_url'  : $('#page-content').attr('render')
+  }
 
-        if (c.state.render_url) {
-          delete c.state.content;
-        }
+  if (state.render_url == undefined || state.render_url == "") {
+    state.content = $('#page-content').html();
+  }
 
-        if (is_update) {
-          History.replaceState(
-            c.state,
-            c.state_title,
-            c.state_url
-          );
+  if (is_update) {
+    History.replaceState(state, title, url);
+  } else {
+    BYPASS_STATE = true;
 
-        } else {
-          BYPASS_STATE = true;
+    History.pushState(state, title, url);
 
-          History.pushState(
-            c.state,
-            c.state_title,
-            c.state_url
-          );
-
-          BYPASS_STATE = false;
-        }
-
-      }
-      
-      $('#page-loading').hide();
-    }
-  );
+    BYPASS_STATE = false;
+  }
 }
+
+
 
 function stateChanged() {
   if (!BYPASS_STATE) {
@@ -90,10 +83,26 @@ function stateChanged() {
   }
 }
 
+function getPage() {
+  $.get(url('page'),
+    function(c) {
+      if (c.error) {
+        alert(c.error);
+      } else {
+
+
+        uiRender(c.state);
+
+        syncState(false, c.title, c.url);
+      }
+    });
+
+}
+
 function uiRender(s) {
-  setValKey('terms', s.terms_v, s.terms);
-  setValKey('tilds', s.tilds_v, s.tilds);
-  setValKey('timestamp', s.timestamp_v, s.timestamp);
+  setValKey('terms', s.terms_v, s.terms_k);
+  setValKey('tilds', s.tilds_v, s.tilds_k);
+  setValKey('timestamp', s.timestamp_v, s.timestamp_k);
 
   if (s.content != undefined) {
     pageRender(s.content);
@@ -108,7 +117,7 @@ function uiRender(s) {
 
         } else {
 
-          pageRender(c.content);
+          pageRender(c.content, s.render_url);
           
         }
 
@@ -118,15 +127,16 @@ function uiRender(s) {
   }
 }
 
-function pageRender(content) {
+function pageRender(content, render_url) {
   $('#page-content').html(content);
+  $('#page-content').attr('render', render_url);
   $('#page-content span.tilde-link').click(pageClick);
 }
 
 function pageClick() {
   setValKey('terms', $(this).attr('termsv'), $(this).attr('terms'));
-  
-  syncState();
+
+  getPage();
 }
 
 
@@ -162,4 +172,6 @@ $(document).ready(function() {
   History.Adapter.bind(window, 'statechange', stateChanged);
 
   syncState(true);
+
+  $('#page-loading').hide();
 });
