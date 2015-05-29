@@ -2,6 +2,6 @@
   No Results for search term '{{ terms }}'.
 {% else %}
   {% for r in results %}
-    <span class="link" terms="{{ r.page_id }}" tilds="{{ r.timestamp }}" style="{{ 'color:red' if r.is_invalid else '' }}" >{{ r.title }}</span> <br/> 
+    <span class="tilde-link" terms="{{ r.page_id }}" termsv="{{ r.page_title }}" style="{{ 'color:red' if r.is_invalid else '' }}">{{ r.page_title }}</span> <br/> 
   {% endfor %}
 {% endif %}

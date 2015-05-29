@@ -2,135 +2,112 @@ from google.appengine.api import users, datastore_errors
 from webapp2 import RequestHandler, uri_for
 from datetime import datetime, timedelta, date
 
-import jinja2
-import os
-import json
 import logging
 
 import models
+import tools
 import views_page
 
-
-###########
-# HELPERS #
-###########
-
-
-def render_to_string(filename, context={ }):
-    env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
-
-    template = env.get_template(filename)
-
-    return template.render(context)
-
-
-def render_with_context(self, filename, context={ }):
-    from google.appengine.api import users
-
-    context.update({
-        'user'              : models.get_user_account(),
-        'empty_page_url'    : ''#uri_for('PageEmpty')
-    })
-
-    output = render_to_string('templates/' + filename, context)
-
-    self.response.out.write(output)
-
-
-def json_response(self, context):
-    self.response.headers['Content-Type'] = 'application/json'
-    self.response.out.write(json.dumps(context))
-
-
-def json_date(d):
-    return d.strftime("%Y-%m-%d")
-
-
-
-
-
-
-
-
-
-
-
-
-# class DummyPage(RequestHandler):
-#     def get(self, terms, tilds=None):
-#         context = {
-#             'terms'     : terms,
-#             'tilds'     : tilds,
-#             'date'      : '2015-10-01'
-#         }
-
-#         content = '' #render_to_string('templates/dummy_page.html', context)
-
-#         context.update({
-#             'content'   : content,
-#         })
-
-#         json_response(self, context)
-
-
-class Demo(RequestHandler):
-    def get(self, terms, tilds=None):
-        timestamp = models.get_current_timestamp(tilds)
-
-        context = {
-            'terms'     : terms,
-            'tilds'     : tilds,
-            'date'      : timestamp
-        }
-
-        render_with_context(self, 'demo.html', context)
-
-
-class DemoHome(RequestHandler):
-    def get(self):
-        render_with_context(self, 'demo.html', { })
+import urllib
 
 
 ################
 # VIEWS : HTML #
 ################
 
-class Page(RequestHandler):
-    def get(self, terms, tilds=None):
-        timestamp = models.get_current_timestamp(tilds)
 
-        results = views_page.search(terms, timestamp)
 
-        logging.debug('PageRender : timestamp = ' + str(timestamp) + ' : results = ' + str(len(results)))
+
+class Date(RequestHandler):
+    def get_json(self, tilds):
+        date = models.get_current_date(tilds)
 
         context = {
-            'terms' : terms,
-            'tilds' : tilds
+            'tilds'         : tilds,
+            'timestamp'     : tools.to_timestamp(date) or '',
+            'timestamp_v'   : tools.to_verbose(d=date) or ''
         }
 
-        if len(results) == 1:
-            content = views_page.render(**results[0])
+        tools.json_response(self, context)
 
-        else:
-            content = render_to_string('templates/page_results.html', {
-                'results'   : results,
-                'terms'     : terms
+
+class Render(RequestHandler):
+    def get(self, **kwargs):
+        context = { }
+
+        try:
+            context['content'] = views_page.render(**kwargs)
+
+        except Exception as e:
+            context['error'] = str(e)
+
+        finally:
+            tools.json_response(self, context)
+
+
+
+def init_state(terms=None, tilds=None, timestamp=None):
+    import sys
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
+
+    date = models.get_current_date(tilds)
+
+    return {
+        'terms'         : terms or '',
+        'terms_v'       : terms or '',
+
+        'tilds'         : tilds or '',
+        'tilds_v'       : tilds or '',
+
+        'timestamp'     : tools.to_timestamp(date) or timestamp or '',
+        'timestamp_v'   : tools.to_verbose(d=date) or tools.to_verbose(t=timestamp) or ''
+    }
+
+
+class Page(RequestHandler):
+    def get(self, terms=None, tilds=None, timestamp=None):
+        context = { }
+
+        try:
+            state = init_state(terms, tilds, timestamp)
+
+            results = views_page.search(**state)
+
+            if len(results) == 1:
+                r = results[0]
+
+                state_title = 'Page: '
+                state['content'] = views_page.render(**r),
+                state['render_url'] = uri_for('Render', timestamp=timestamp or '', page_id=r['page_id'], rev_id=r.get('rev_id', ''))
+
+            elif terms:
+                state_title = 'Results: '
+                state['content'] = tools.render_to_string('page_results.html', dict({'results' : results}, **state))
+
+            else:
+                state_title = ''
+                state['content'] = tools.render_to_string('page_empty.html')
+
+            context.update({
+                'state'         : state,
+                'state_title'   : state_title + str(terms) + str(tilds),
+                'state_url'     : uri_for('Base', terms=urllib.quote(terms) or '', tilds=tilds or '')
             })
-            
-        context.update({
-            'content'   : content
-        })
 
-        json_response(self, context)
+        except Exception as e:
+            context['error'] = str(e)
 
-
-class PageEmpty(RequestHandler):
-    def get(self):
-        render_with_context(self, 'page_empty.html')
+        finally:
+            tools.json_response(self, context)
 
 
+class Base(RequestHandler):
+    def get(self, terms=None, tilds=None):
 
+        state = init_state(terms, tilds)
 
+        tools.render_with_context(self, 'page_base.html', state)
 
 
 
@@ -153,7 +130,7 @@ class Home(RequestHandler):
             'tilds'     : tilds
         }
 
-        render_with_context(self, 'home.html', context)
+        tools.render_with_context(self, 'home.html', context)
 
 
 class User(RequestHandler):
@@ -162,7 +139,7 @@ class User(RequestHandler):
 
         }
 
-        render_with_context(self, 'user.html', context)
+        tools.render_with_context(self, 'user.html', context)
 
 
 class AdminConsole(RequestHandler):
@@ -171,7 +148,7 @@ class AdminConsole(RequestHandler):
 
         }
 
-        render_with_context(self, 'admin.html', context)
+        tools.render_with_context(self, 'admin.html', context)
 
 
 
@@ -182,7 +159,7 @@ class Tilds(RequestHandler):
     def get(self, tilds):
         context = models.get_next_tilds(tilds)
 
-        json_response(self, context)
+        tools.json_response(self, context)
             
 
 
@@ -224,8 +201,8 @@ class Timeline(RequestHandler):
                 # diff = max((n.end - n.start) / 10, timedelta(days=1))
 
                 # context.update({
-                #     'min'       : json_date(n.start - diff),
-                #     'max'       : json_date(n.end + diff)
+                #     'min'       : tools.to_json_date(n.start - diff),
+                #     'max'       : tools.to_json_date(n.end + diff)
                 # })
 
             from gviz_api import DataTable
@@ -247,7 +224,7 @@ class Timeline(RequestHandler):
             context['error'] = str(e)
 
         finally:
-            json_response(self, context)
+            tools.json_response(self, context)
 
 
 class Derive(RequestHandler):
@@ -264,7 +241,7 @@ class Derive(RequestHandler):
             context['error'] = str(e)
 
         finally:
-            json_response(self, context)
+            tools.json_response(self, context)
 
 
 class SeenTag(RequestHandler):
@@ -285,7 +262,7 @@ class SeenTag(RequestHandler):
             context['error'] = str(e)
 
         finally:
-            json_response(self, context)
+            tools.json_response(self, context)
 
 
 class SeenTime(RequestHandler):
@@ -303,7 +280,7 @@ class SeenTime(RequestHandler):
             context['error'] = str(e)
 
         finally:
-            json_response(self, context)
+            tools.json_response(self, context)
 
 
 

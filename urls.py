@@ -3,31 +3,21 @@ import views
 
 urls = [
 
-    # Route(
-    #     r'/dummy/<terms:([^/]+)?>/<tilds:([^/]+)?>',
-    #     handler=views.DummyPage,
-    #     name='DummyPage'
-    # ),
 
     Route(
-        r'/<terms:([^/]+)?>/<tilds:([^/]+)?>',
-        handler=views.Demo,
-        name='Demo'
+        r'/d/<tilds:~([^/]+)?>',
+        handler='views.Date:get_json',
+        name='JsonDate'
     ),
 
     Route(
-        r'/',
-        handler=views.DemoHome,
-        name='DemoHome'
+        r'/r/<timestamp:([^/]+)?>/<page_id:([^/]+)?>/<rev_id:([^/]+)?>',
+        handler=views.Render,
+        name='Render'
     ),
 
-
-
-
-
-
     Route(
-        r'/p/<terms:([^/]+)?>/<tilds:([^/]+)?>',
+        r'/p/<timestamp:([^/]+)?>/<terms:([^/^~]+)?><tilds:(~[^/]+)?>',
         handler=views.Page,
         name='Page'
     ),
@@ -35,19 +25,29 @@ urls = [
 
 
 
+
     Route(
-        r'/p/',
-        handler=views.PageEmpty,
-        name='PageEmpty'
+        r'/<terms:([^/^~]+)?><tilds:(~[^/]+)?>',
+        handler=views.Base,
+        name='Base'
+    ),
+
+    Route(
+        r'/<terms:([^/^~]+)?>',
+        handler=views.Base,
+        name='BaseLatest'
+    ),
+
+    Route(
+        r'/',
+        handler=views.Base,
+        name='BaseNull'
     ),
 
 
 
-    Route(
-        r'/t/<tilds:([^/]+)?>',
-        handler=views.Tilds,
-        name='Tilds'
-    ),
+
+
 
 
     # Route(
@@ -58,7 +58,21 @@ urls = [
 
 
 
+    # Route(
+    #     r'/dummy/<terms:([^/]+)?>/<tilds:([^/]+)?>',
+    #     handler=views.DummyPage,
+    #     name='DummyPage'
+    # ),
 
+
+
+
+
+    Route(
+        r'/t/<tilds:([^/]+)?>',
+        handler=views.Tilds,
+        name='Tilds'
+    ),
 
 
     Route(

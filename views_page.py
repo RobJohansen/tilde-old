@@ -7,27 +7,60 @@ import views
 from webapp2 import uri_for
 from datetime import datetime, timedelta, date
 
+import tools
+
+
+USE_GOOGLE_SEARCH   = False
 
 #################
 # PAGE : GOOGLE #
 #################
-# G_KEY = 'AIzaSyCjOYChDxIkvg0rPsu7PH3WZ103HRU7rFk'
 
-# G_CSE = '016459373861639011207:s6x5jgsujyo'
+GOOGLE_BASE         = 'https://www.googleapis.com'
 
-# G_QRY = 'https://www.googleapis.com/customsearch/v1?alt=json' + \
-#                                               '&key={key}' + \
-#                                               '&cx={cse}' + \
-#                                               '&q={qry}' + \
-#                                               '&siteSearch=en.wikipedia.org'
-#                                               #'&sort=date:r:{dts}:{dte}' + \
+GOOGLE_SEARCH_LIMIT = '5'
 
-# def make_query(query, start=None, end=None):
-#     return G_QRY.format(
-#         key = G_KEY,
-#         cse = G_CSE,
-#         qry = query
-#     )
+GOOGLE_KEY          = 'AIzaSyCjOYChDxIkvg0rPsu7PH3WZ103HRU7rFk'
+
+GOOGLE_CSE          = '016459373861639011207:s6x5jgsujyo'
+
+GOOGLE_URL_SEARCH   = GOOGLE_BASE + '/customsearch/v1' + \
+                                        '?alt=json' + \
+                                        '&num=' + GOOGLE_SEARCH_LIMIT + \
+                                        '&key=' + GOOGLE_KEY + \
+                                        '&cx=' + GOOGLE_CSE + \
+                                        '&q={terms}' + \
+                                        '&siteSearch={site}' + \
+                                        '&sort=date:r:{end}:{end}'
+
+
+###############
+# PAGE : WIKI #
+###############
+
+WIKI_BASE           = 'http://en.wikipedia.org'
+
+WIKI_SEARCH_LIMIT   = '5'
+
+WIKI_URL_SEARCH     = WIKI_BASE + '/w/api.php' + \
+                                        '?action=opensearch' + \
+                                        '&limit=' + WIKI_SEARCH_LIMIT + \
+                                        '&redirects=resolve' + \
+                                        '&search={terms}'
+
+WIKI_URL_HISTORY    = WIKI_BASE + '/w/api.php' +\
+                                        '?action=query' + \
+                                        '&continue=' + \
+                                        '&prop=revisions' + \
+                                        '&format=json' + \
+                                        '&rvprop=ids' + \
+                                        '&titles={page_title}' + \
+                                        '&rvstart={timestamp}'
+
+WIKI_URL_PAGE_REV   = WIKI_BASE + '/w/index.php' + \
+                                        '?oldid={rev_id}'
+
+WIKI_URL_PAGE_NRM   = WIKI_BASE + '/wiki/{page_id}'
 
 
 ###########
@@ -47,57 +80,55 @@ def get_response(url, context):
     return html
 
 
-###############
-# PAGE : WIKI #
-###############
+###########
+# ENTRIES #
+###########
 
-WIKI_BASE = 'http://en.wikipedia.org'
-
-WIKI_SEARCH_LIMIT = '10'
-
-WIKI_URL_SEARCH =       WIKI_BASE + '/w/api.php?action=opensearch' + \
-                                              '&limit=' + WIKI_SEARCH_LIMIT + \
-                                              '&redirects=resolve' + \
-                                              '&search={terms}'
-
-WIKI_URL_HISTORY =      WIKI_BASE + '/w/api.php?action=query' + \
-                                              '&continue=' + \
-                                              '&prop=revisions' + \
-                                              '&format=json' + \
-                                              '&rvprop=ids' + \
-                                              '&titles={page_title}' + \
-                                              '&rvstart={timestamp}'
-
-WIKI_URL_PAGE_VERS =    WIKI_BASE + '/w/index.php?oldid={rev_id}'
-
-WIKI_URL_PAGE_DFLT =    WIKI_BASE + '/wiki/{page_id}'
-
-
-def search(terms, timestamp=None):
+def search(terms, **kwargs):
     results = []
 
-    html = get_response(WIKI_URL_SEARCH, {
-            'terms' : urllib.quote(terms)
-        })
+    # Find Results
+    pages = []
 
-    jsnp = json.load(html)
+    if USE_GOOGLE_SEARCH:
+        html = get_response(GOOGLE_URL_SEARCH, {
+                'terms' : urllib.quote(terms),
+                'site'  : WIKI_BASE,
+                'end'   : kwargs.get('timestamp', '')
+            })
 
-    pages = zip(jsnp[1], map(lambda p: p.split('/')[-1:][0], jsnp[3]))
+        jsnp = json.load(html)
 
+        if jsnp.get('items'):
+            pages = map(lambda p: ('-'.join(p['title'].split('-')[:-1]), p['link'].split('/')[-1:][0]), jsnp['items'])
+
+    else:
+        html = get_response(WIKI_URL_SEARCH, {
+                'terms' : urllib.quote(terms)
+            })
+
+        jsnp = json.load(html)
+
+        pages = zip(jsnp[1], map(lambda p: p.split('/')[-1:][0], jsnp[3]))
+
+
+    # Check Result Existence
     for (page_title, page_id) in pages:
         result = {
-            'title'     : page_title,
-            'url'       : uri_for('Page', terms=page_id, tilds=timestamp or ''),
-            'page_id'   : page_id
+            'page_id'       : page_id,
+            'page_title'    : page_title,
+            'is_match'      : urllib.unquote(terms) in [page_id, page_title]
         }
 
-        if timestamp:
+        if kwargs.get('timestamp'):
+            timestamp = kwargs.get('timestamp')
+
             rev_id = None
 
             try:
                 html = get_response(WIKI_URL_HISTORY, {
                         'page_title'    : urllib.quote(page_title),
-                        'timestamp'     : timestamp
+                        'timestamp'     : timestamp.ljust(14, '0')
                     })
 
                 jsnr = json.load(html)
@@ -112,19 +143,13 @@ def search(terms, timestamp=None):
                 logging.error('views_page.search : error = ' + str(e))
 
             result.update({
-                'is_match'      : page_id == terms and rev_id,
                 'is_invalid'    : not rev_id,
                 'rev_id'        : rev_id,
                 'timestamp'     : timestamp,
-                'date'          : datetime.strptime(timestamp, '%Y%m%d%H%M%S')
+                'date'          : tools.to_verbose(t=timestamp)
             })
 
-        else:
-            result.update({
-                'is_match'  : page_id == terms
-            })
-
-        if result['is_match']:
+        if result['is_match'] and not result['is_invalid']:
             return [result]
 
         else:
@@ -135,20 +160,20 @@ def search(terms, timestamp=None):
 
 def render(timestamp=None, rev_id=None, page_id=None, **kwargs):
     if kwargs.get('is_invalid'):
-        return views.render_to_string('templates/page_non_existent.html', kwargs)
+        return tools.render_to_string('page_non_existent.html', kwargs)
 
     else:
         if rev_id:
             logging.debug('views_page.render : revision')
 
-            html = get_response(WIKI_URL_PAGE_VERS, {
+            html = get_response(WIKI_URL_PAGE_REV, {
                     'rev_id'    : rev_id
                 })
 
         else:
             logging.debug('views_page.render : default')
 
-            html = get_response(WIKI_URL_PAGE_DFLT, {
+            html = get_response(WIKI_URL_PAGE_NRM, {
                     'page_id'   : page_id
                 })
         
@@ -170,37 +195,22 @@ def render(timestamp=None, rev_id=None, page_id=None, **kwargs):
 
         # UPDATE LINKS
         for link in soup.find(id='bodyContent')('a'):
-            link['class'] = link.get('class', []) + ['wiki-tilde']
-
             if link.has_key('rel'):
                 pass
 
             elif '#' == link['href'][0]:
                 pass
 
-            elif ':' in link['href']:
+            elif ':' in link['href'] and not ':_' in link['href']:
                 pass
 
             else:
-                new_page_id = link['href'].split('/')[-1]
+                t = soup.new_tag('span', **{'class' : 'tilde-link'})
 
-                # link['href'] = uri_for('Page', terms=new_page_id, tilds=timestamp or '')
+                t.string = ('~' if timestamp else '') + link.text
+                t['terms'] = link['href'].split('/')[-1]
+                t['termsv'] = link.text
 
-                # if timestamp:
-                #     tilde_tag = soup.new_tag('span', **{'class' : 'wiki-tilde-tilde'})
-                #     tilde_tag.string = '~'
+                link.replaceWith(t)
 
-                #     link.append(tilde_tag)
-
-
-                new_link = soup.new_tag('span', **{'class' : 'link'})
-                try:
-                    new_link.string = ('~' if timestamp else '') + str(link.string)
-                except Exception:
-                    new_link.string = 'Error'
-                new_link['terms'] = new_page_id
-                new_link['tilds'] = timestamp or ''
-
-                link.replaceWith(new_link)
-
-        return str(soup.find(id='bodyContent'))
+        return str(soup.find(id='content'))

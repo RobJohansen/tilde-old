@@ -2,11 +2,8 @@ from google.appengine.ext import ndb
 from google.appengine.api import users
 from datetime import datetime, timedelta
 
-
-
-DATE_FORMAT = '%Y%m%d'
-
-TIME_FORMAT = '%H%M%S'
+import tools
+import logging
 
 
 ###########
@@ -30,20 +27,24 @@ def get_current_tild(tilds):
         return None
         
 
-def get_current_timestamp(tilds):
-    try:
-        return datetime.strptime(tilds, DATE_FORMAT).strftime(DATE_FORMAT) + '010101'
-
-    except Exception:
-        try:
-            return datetime.strptime(tilds, DATE_FORMAT + TIME_FORMAT).strftime(DATE_FORMAT + TIME_FORMAT)
-
-        except Exception:
+def get_current_date(tilds):
+    if tilds:
+        if tilds[0] == '~':
             try:
-                return get_current_tild(tilds).start.strftime(DATE_FORMAT + TIME_FORMAT)
+                return tools.to_date(tilds[1:])
 
             except Exception:
-                return None
+                try:
+                    return get_current_tild(tilds).start
+
+                except Exception:
+                    return None
+
+        else:
+            return None
+
+    else:
+        return None
 
 
 def get_next_tilds(tilds):
