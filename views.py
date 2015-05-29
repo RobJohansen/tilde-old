@@ -45,68 +45,69 @@ class Render(RequestHandler):
             tools.json_response(self, context)
 
 
-def get_page(terms=None, tilds=None, timestamp=None):
-    context = { }
 
-    try:
-        import sys
-        reload(sys)
-        sys.setdefaultencoding('utf-8')
+def init_state(terms=None, tilds=None, timestamp=None):
+    import sys
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
 
-        date = models.get_current_date(tilds)
+    date = models.get_current_date(tilds)
 
-        state = {
-            'terms_k'       : terms or '',
-            'terms_v'       : terms or '',
+    return {
+        'terms'         : terms or '',
+        'terms_v'       : terms or '',
 
-            'tilds_k'       : tilds or '',
-            'tilds_v'       : tilds or '',
+        'tilds'         : tilds or '',
+        'tilds_v'       : tilds or '',
 
-            'timestamp_k'   : tools.to_timestamp(date) or timestamp or '',
-            'timestamp_v'   : tools.to_verbose(d=date) or tools.to_verbose(t=timestamp) or ''
-        }
-
-        results = views_page.search(terms, **state)
-
-        if len(results) == 1:
-            r = results[0]
-
-            state_title = 'Page: '
-            state['content'] = views_page.render(**r),
-            state['render_url'] = uri_for('Render', timestamp=timestamp or '', page_id=r['page_id'], rev_id=r.get('rev_id', ''))
-
-        elif terms:
-            state_title = 'Results: '
-            state['content'] = tools.render_to_string('page_results.html', dict({'results' : results}, **state))
-
-        else:
-            state_title = ''
-            state['content'] = tools.render_to_string('page_empty.html')
-
-        context.update({
-            'state'     : state,
-            'title'     : state_title + str(terms) + str(tilds),
-            'url'       : uri_for('Base', terms=urllib.quote(terms) or '', tilds=tilds or '')
-        })
-
-    except Exception as e:
-        context['error'] = str(e)
-
-    return context
+        'timestamp'     : tools.to_timestamp(date) or timestamp or '',
+        'timestamp_v'   : tools.to_verbose(d=date) or tools.to_verbose(t=timestamp) or ''
+    }
 
 
 class Page(RequestHandler):
     def get(self, terms=None, tilds=None, timestamp=None):
-        context = get_page(terms, tilds)
+        context = { }
 
-        tools.json_response(self, context)
+        try:
+            state = init_state(terms, tilds, timestamp)
+
+            results = views_page.search(**state)
+
+            if len(results) == 1:
+                r = results[0]
+
+                state_title = 'Page: '
+                state['content'] = views_page.render(**r),
+                state['render_url'] = uri_for('Render', timestamp=timestamp or '', page_id=r['page_id'], rev_id=r.get('rev_id', ''))
+
+            elif terms:
+                state_title = 'Results: '
+                state['content'] = tools.render_to_string('page_results.html', dict({'results' : results}, **state))
+
+            else:
+                state_title = ''
+                state['content'] = tools.render_to_string('page_empty.html')
+
+            context.update({
+                'state'         : state,
+                'state_title'   : state_title + str(terms) + str(tilds),
+                'state_url'     : uri_for('Base', terms=urllib.quote(terms) or '', tilds=tilds or '')
+            })
+
+        except Exception as e:
+            context['error'] = str(e)
+
+        finally:
+            tools.json_response(self, context)
 
 
 class Base(RequestHandler):
     def get(self, terms=None, tilds=None):
-        context = get_page(terms, tilds)
 
-        tools.render_with_context(self, 'page_base.html', context)
+        state = init_state(terms, tilds)
+
+        tools.render_with_context(self, 'page_base.html', state)
 
 
 

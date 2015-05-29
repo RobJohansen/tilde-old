@@ -149,7 +149,7 @@ def search(terms, **kwargs):
                 'date'          : tools.to_verbose(t=timestamp)
             })
 
-        if result['is_match'] and not result.get('is_invalid'):
+        if result['is_match'] and not result['is_invalid']:
             return [result]
 
         else:

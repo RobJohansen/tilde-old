@@ -39,41 +39,48 @@ function url(name) {
 }
 
 
-function syncState(is_update, title, url) {
-  if (title == undefined) {
-    var title = $('title').html();
-    var url = $('title').attr('url');
-  }
+function syncState(is_update) {
+  $('#page-loading').show();
 
-  var state = {
-    'terms_k'     : $('#terms').getKey(),
-    'terms_v'     : $('#terms').val(),
+  $.get(url('page'),
+    function(c) {
+      if (c.error) {
 
-    'tilds_k'     : $('#tilds').getKey(),
-    'tilds_v'     : $('#tilds').val(),
+        alert(c.error);
 
-    'timestamp_k' : $('#timestamp').getKey(),
-    'timestamp_v' : $('#timestamp').val(),
+      } else {
 
-    'render_url'  : $('#page-content').attr('render')
-  }
+        uiRender(c.state);
 
-  if (state.render_url == undefined || state.render_url == "") {
-    state.content = $('#page-content').html();
-  }
+        if (c.state.render_url) {
+          delete c.state.content;
+        }
 
-  if (is_update) {
-    History.replaceState(state, title, url);
-  } else {
-    BYPASS_STATE = true;
+        if (is_update) {
+          History.replaceState(
+            c.state,
+            c.state_title,
+            c.state_url
+          );
 
-    History.pushState(state, title, url);
+        } else {
+          BYPASS_STATE = true;
 
-    BYPASS_STATE = false;
-  }
+          History.pushState(
+            c.state,
+            c.state_title,
+            c.state_url
+          );
+
+          BYPASS_STATE = false;
+        }
+
+      }
+      
+      $('#page-loading').hide();
+    }
+  );
 }
-
-
 
 function stateChanged() {
   if (!BYPASS_STATE) {
@@ -83,26 +90,10 @@ function stateChanged() {
   }
 }
 
-function getPage() {
-  $.get(url('page'),
-    function(c) {
-      if (c.error) {
-        alert(c.error);
-      } else {
-
-
-        uiRender(c.state);
-
-        syncState(false, c.title, c.url);
-      }
-    });
-
-}
-
 function uiRender(s) {
-  setValKey('terms', s.terms_v, s.terms_k);
-  setValKey('tilds', s.tilds_v, s.tilds_k);
-  setValKey('timestamp', s.timestamp_v, s.timestamp_k);
+  setValKey('terms', s.terms_v, s.terms);
+  setValKey('tilds', s.tilds_v, s.tilds);
+  setValKey('timestamp', s.timestamp_v, s.timestamp);
 
   if (s.content != undefined) {
     pageRender(s.content);
@@ -117,7 +108,7 @@ function uiRender(s) {
 
         } else {
 
-          pageRender(c.content, s.render_url);
+          pageRender(c.content);
           
         }
 
@@ -127,16 +118,15 @@ function uiRender(s) {
   }
 }
 
-function pageRender(content, render_url) {
+function pageRender(content) {
   $('#page-content').html(content);
-  $('#page-content').attr('render', render_url);
   $('#page-content span.tilde-link').click(pageClick);
 }
 
 function pageClick() {
   setValKey('terms', $(this).attr('termsv'), $(this).attr('terms'));
-
-  getPage();
+  
+  syncState();
 }
 
 
@@ -172,6 +162,4 @@ $(document).ready(function() {
   History.Adapter.bind(window, 'statechange', stateChanged);
 
   syncState(true);
-
-  $('#page-loading').hide();
 });
