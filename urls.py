@@ -5,23 +5,49 @@ urls = [
 
 
     Route(
-        r'/d/<tilds:~([^/]+)?>',
-        handler='views.Date:get_json',
-        name='JsonDate'
+        r'/t/<tilds:([^/]+)?>',
+        handler='views.Tilds'
     ),
 
     Route(
-        r'/r/<timestamp:([^/]+)?>/<page_id:([^/]+)?>/<rev_id:([^/]+)?>',
-        handler=views.Render,
-        name='Render'
+        r'/get_next_tilds/<id:([^/]+)?>',
+        handler='views.Derive'
     ),
 
     Route(
-        r'/p/<timestamp:([^/]+)?>/<terms:([^/^~]+)?><tilds:(~[^/]+)?>',
+        r'/d/<tilds:([^/]+)?>',
+        handler='views.Date'
+    ),
+
+
+
+    Route(
+        r'/s/<terms:([^/^~]+)?>',
+        handler='views.Search'
+    ),
+
+
+    Route(
+        r'/timeline/<tilds:([^/]+)?>',
+        handler='views.Timeline'
+    ),
+
+
+
+
+
+
+    Route(
+        r'/page/<terms:([^/^~]+)?><tilds:(~[^/]+)?>',
         handler=views.Page,
         name='Page'
     ),
 
+    Route(
+        r'/render/<rev_id:\d+>',
+        handler=views.Render,
+        name='Render'
+    ),
 
 
 
@@ -48,62 +74,23 @@ urls = [
 
 
 
-
-
     # Route(
-    #     r'/',
-    #     handler=views.Home,
-    #     name='Home'
+    #     r'/seen/<id:([^/]+)?>',
+    #     handler=views.SeenTag,
+    #     name='SeenTag'
     # ),
 
-
-
     # Route(
-    #     r'/dummy/<terms:([^/]+)?>/<tilds:([^/]+)?>',
-    #     handler=views.DummyPage,
-    #     name='DummyPage'
+    #     r'/seen/<year:\d{4}>/<month:\d+>/<day:\d+>/<id:([^/]+)?>',
+    #     handler=views.SeenTime,
+    #     name='SeenTime'
     # ),
 
-
-
-
-
-    Route(
-        r'/t/<tilds:([^/]+)?>',
-        handler=views.Tilds,
-        name='Tilds'
-    ),
-
-
-    Route(
-        r'/timeline/<tilds:([^/]+)?>',
-        handler=views.Timeline,
-        name='Timeline'
-    ),
-
-    Route(
-        r'/derive/<id:([^/]+)?>',
-        handler=views.Derive,
-        name='Derive'
-    ),
-
-    Route(
-        r'/seen/<id:([^/]+)?>',
-        handler=views.SeenTag,
-        name='SeenTag'
-    ),
-
-    Route(
-        r'/seen/<year:\d{4}>/<month:\d+>/<day:\d+>/<id:([^/]+)?>',
-        handler=views.SeenTime,
-        name='SeenTime'
-    ),
-
-    Route(
-        r'/user',
-        handler=views.User,
-        name='User'
-    )
+    # Route(
+    #     r'/user',
+    #     handler=views.User,
+    #     name='User'
+    # )
 ]
 
 urls_admin = [

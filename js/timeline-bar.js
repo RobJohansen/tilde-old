@@ -440,10 +440,7 @@ function initTimeline() {
         timelineChange
     );
 
-    var ts = $('.tild');
-
-    if (ts.length > 0) {
-        ts.hookupTild();
+    if ($('.tild').length > 0) {
         updateTimeline();
     }
 
@@ -454,11 +451,11 @@ google.load("visualization", "1");
 google.setOnLoadCallback(initTimeline);
 
 
-///////////
-// READY //
-///////////
-$(document).ready(function() {
+//////////
+// INIT //
+//////////
+function init_timeline_bar() {
     window.onresize = function() {
         timeline.checkResize();
-    };
-});
+    }; 
+}

@@ -18,34 +18,6 @@ import urllib
 
 
 
-class Date(RequestHandler):
-    def get_json(self, tilds):
-        date = models.get_current_date(tilds)
-
-        context = {
-            'tilds'         : tilds,
-            'timestamp'     : tools.to_timestamp(date) or '',
-            'timestamp_v'   : tools.to_verbose(d=date) or ''
-        }
-
-        tools.json_response(self, context)
-
-
-class Render(RequestHandler):
-    def get(self, **kwargs):
-        context = { }
-
-        try:
-            context['content'] = views_page.render(**kwargs)
-
-        except Exception as e:
-            context['error'] = str(e)
-
-        finally:
-            tools.json_response(self, context)
-
-
-
 def init_state(terms=None, tilds=None, timestamp=None):
     import sys
     reload(sys)
@@ -65,11 +37,58 @@ def init_state(terms=None, tilds=None, timestamp=None):
     }
 
 
-class Page(RequestHandler):
-    def get(self, terms=None, tilds=None, timestamp=None):
+class TempBloodhound(RequestHandler):
+    def get(self):
+        context = [
+            {'name' : '1'},
+            {'name' : '2'},
+            {'name' : '3'}
+        ]
+
+        tools.json_response(self, context)
+
+
+class Date(RequestHandler):
+    def get(self, tilds=None):
+        date = models.get_current_date(tilds)
+
+        context = {
+            'tilds'         : tilds,
+            'timestamp'     : tools.to_timestamp(date) or '',
+            'timestamp_v'   : tools.to_verbose(d=date) or ''
+        }
+
+        tools.json_response(self, context)
+
+
+class Render(RequestHandler):
+    def get(self, rev_id):
         context = { }
 
         try:
+            timestamp = self.request.get('timestamp')
+            
+            context['content'] = views_page.render(rev_id, timestamp)
+
+        except Exception as e:
+            context['error'] = str(e)
+
+        finally:
+            if self.request.get('print'):
+                self.response.write(context[self.request.get('print')])
+
+            else:
+                tools.json_response(self, context)
+
+
+
+class Page(RequestHandler):
+    def get(self, terms=None, tilds=None):
+        context = { }
+
+        try:
+            timestamp = self.request.get('timestamp')
+
             state = init_state(terms, tilds, timestamp)
 
             results = views_page.search(**state)
@@ -77,9 +96,11 @@ class Page(RequestHandler):
             if len(results) == 1:
                 r = results[0]
 
+                state['terms_v'] = r['page_title']
+
                 state_title = 'Page: '
-                state['content'] = views_page.render(**r),
-                state['render_url'] = uri_for('Render', timestamp=timestamp or '', page_id=r['page_id'], rev_id=r.get('rev_id', ''))
+                state['content'] = views_page.render(r['rev_id'], timestamp),
+                state['render_url'] = uri_for('Render', rev_id=r['rev_id'], timestamp=timestamp or '')
 
             elif terms:
                 state_title = 'Results: '
@@ -91,20 +112,23 @@ class Page(RequestHandler):
 
             context.update({
                 'state'         : state,
-                'state_title'   : state_title + str(terms) + str(tilds),
-                'state_url'     : uri_for('Base', terms=urllib.quote(terms) or '', tilds=tilds or '')
+                'state_title'   : state_title + str(state['terms_v']) + str(state['tilds_v']),
+                'state_url'     : uri_for('Base', terms=state['terms_v'] or '', tilds=state['tilds_v'])
             })
 
         except Exception as e:
             context['error'] = str(e)
 
         finally:
-            tools.json_response(self, context)
+            if self.request.get('print'):
+                self.response.write(context['state'][self.request.get('print')])
+
+            else:
+                tools.json_response(self, context)
 
 
 class Base(RequestHandler):
     def get(self, terms=None, tilds=None):
-
         state = init_state(terms, tilds)
 
         tools.render_with_context(self, 'page_base.html', state)
@@ -122,15 +146,13 @@ class Base(RequestHandler):
 #####################
 # VIEWS : TEMPLATES #
 #####################
-class Home(RequestHandler):
-    def get(self):
-        tilds = [ t for t in self.request.get('ts').split('~') if len(t) > 0 ]
+# class Home(RequestHandler):
+#     def get(self):
+#         context = {
+        
+#         }
 
-        context = {
-            'tilds'     : tilds
-        }
-
-        tools.render_with_context(self, 'home.html', context)
+#         tools.render_with_context(self, 'home.html', context)
 
 
 class User(RequestHandler):

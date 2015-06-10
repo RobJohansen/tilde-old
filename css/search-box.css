@@ -1,0 +1,131 @@
+/* SEARCH BOX */
+#search {
+  background-color:   white;
+  position:           absolute;
+  left:               10px;
+  top:                10px;
+  height:             35px;
+  line-height:        35px;
+  min-width:          400px;
+  padding-right:      5px;
+  opacity:            0.8;
+}
+
+/*#search #domain {
+  float:              left;
+}
+
+#search #domain img {
+  width:              20px;
+}
+
+#search #domain > span {
+  border:             none;
+  width:              40px;
+}
+
+#tilds-loading {
+  position:           absolute;
+  left:               430px;
+  top:                20px;
+  z-index:            100;
+}*/
+
+#terms {
+  float:              left;
+  border:             none;
+  width:              400px;
+}
+
+#tilds {
+  padding-left:       0px;
+  border:             none;
+  color:              rgb(0, 100, 255);
+}
+
+#tilds-section {
+  display:            inline-block;
+  position:           relative;
+  line-height:        0px !important;
+}
+
+#tilds-section .tt-hint {
+  padding-left:       0px !important;
+}
+
+#tilds-section .tt-dropdown-menu {
+  margin-left:        -10px;
+}
+
+.tilde {
+  float:              left;
+  line-height:        25px !important;
+  font-size:          24px;
+  width:              14px;
+  color:              rgb(0, 100, 255);
+}
+
+.tild {
+  display:            inline-block;
+  position:           relative;
+  line-height:        25px;
+  height:             25px;
+  margin:             5px 0px;
+  color:              rgb(0, 100, 255);
+  border-radius:      5px;
+}
+
+.tild .fa {
+  font-size:          16px;
+  width:              14px;
+  font-weight:        small;
+}
+
+.tild:hover,
+.tild.focus {
+  cursor:             pointer;
+  background-color:   rgb(0, 70, 130) !important;
+  color:              rgb(75, 185, 240) !important;
+}
+
+
+
+/* TYPEAHEAD */
+#search > .twitter-typeahead {
+  display:            inline !important;
+  float:              left;
+}
+
+#search > .twitter-typeahead > input {
+  left:               inherit !important;
+}
+
+.twitter-typeahead .tt-hint {
+  display:            block;
+  height:             35px;
+  color:              rgb(150, 150, 150);
+}
+
+.twitter-typeahead .tt-dropdown-menu {
+  -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, .2);
+  -moz-box-shadow:    0 5px 10px rgba(0, 0, 0, .2);
+  box-shadow:         0 5px 10px rgba(0, 0, 0, .2);
+  padding:            0px 6px;
+  border:             1px solid rgb(200, 200, 200);
+  border-top:         1px solid transparent;
+  background-color:   rgb(255, 255, 255);
+}
+
+.twitter-typeahead .tt-suggestion {
+  line-height:        24px;
+}
+
+.twitter-typeahead .tt-suggestion p {
+  margin:             5px;
+}
+
+.twitter-typeahead .tt-suggestion.tt-cursor {
+  cursor:             pointer;
+  background-color:   rgb(0, 70, 130) !important;
+  color:              rgb(75, 185, 240) !important;
+}

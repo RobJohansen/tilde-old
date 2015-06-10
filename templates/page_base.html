@@ -4,93 +4,122 @@
 
     <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
 
+    <!--        -->
+    <!-- Styles -->
+    <!--        -->
+    <link rel="stylesheet" type="text/css" href="css/timeline/timeline.css">
+    <link rel="stylesheet" type="text/css" href="css/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap/bootstrap.min.css">
+
+    <link rel="stylesheet" type="text/css" href="css/timeline-bar.css">
+    <link rel="stylesheet" type="text/css" href="css/search-box.css">
+    <link rel="stylesheet" type="text/css" href="css/page-area.css">
+    <link rel="stylesheet" type="text/css" href="css/page-area-wiki.css">
+    <link rel="stylesheet" type="text/css" href="css/global.css">
+
+    <!--         -->
     <!-- Scripts -->
-    <script type="text/javascript" src="../js/jquery/jquery-1.9.1.js"></script>
-    <script type="text/javascript" src="../js/history.js/scripts/bundled/html4+html5/jquery.history.js"></script>
+    <!--         -->
+    <script type="text/javascript" src="js/jquery/jquery-1.9.1.js"></script>
+    <script type="text/javascript" src="js/jquery/jquery-ui.js"></script>
+    <script type="text/javascript" src="js/history.js/scripts/bundled/html4+html5/jquery.history.js"></script>
 
-    <link rel="stylesheet" type="text/css" href="../css/font-awesome/css/font-awesome.min.css">
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="js/timeline/timeline.js"></script>
 
-    <link rel="stylesheet" type="text/css" href="../css/wiki.css">
+    <script type="text/javascript" src="js/bootstrap/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap/bootbox.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap/bootstrap.typeahead.js"></script>
 
+    <script type="text/javascript" src="js/timeline-bar.js"></script>
+    <script type="text/javascript" src="js/global.js"></script>
+    <script type="text/javascript" src="js/search-box.js"></script>
+    <script type="text/javascript" src="js/page-state.js"></script>
 
-
-    <style>
-
-      #search {
-        margin:             10px;
-        border:             3px solid blue;
-      }
-
-      #search #timestamp {
-        background-color:   red;
-      }
-
-
-      #page {
-        margin:             10px;
-        border:             3px solid red;
-        min-height: 100px;
-      }
-
-      #page #page-content {
-        width:              100%;
-        border:             none;
-      }
-
-      #page #page-loading {
-        background:         rgba(255,255,255,0.5);
-        text-align:         center;
-        position:           fixed;
-        width:              100%;
-        height:             100%;
-        z-index:            100;
-      }
-
-      #page #page-loading i {
-        color:              rgb(200, 200, 200);
-        position:           fixed;
-        font-size:          80px;
-      }
-
-      #page span.tilde-link {
-        color:              blue;
-        cursor:             pointer;
-        text-decoration:    underline;
-      }
-
-      #page #page-content #empty-tilde {
-        text-align:         center;
-        position:           fixed;
-        top:                50%;
-        left:               50%;
-        transform:          translate(-50%, -50%);
-        line-height:        30px !important;
-        color:              rgb(200, 200, 200);
-        cursor:             pointer;
-        font-size:          180px;
-      }
-
-      #page #page-content #empty-tilde:hover {
-        color:              rgb(180, 180, 180);
-        text-decoration:    none;
-      }
-    </style>
-
-    <script type="text/javascript" src="../js/base.js"></script>
+    <!--      -->
+    <!-- Init -->
+    <!--      -->
+    <script type="text/javascript">
+      $(document).ready(function() {
+        init_search_box();
+        init_page_state();
+        init_timeline_bar();
+      });
+    </script>
   </head>
 
   <body>
+    <!-- Timeline -->
+<!--     <div id="date">
+      <span class="drop-shadow">
+        <span id="date-text">29 Nov 2014</span>
+        &nbsp;
+        <i class="fa fa-undo"></i>
+      </span>
+    </div> -->
+
+    <div id="timeline"></div>
 
 
-    <div id="search">
+    <!-- Menu -->
+<!--     <div id="menu">
+      <span class="dropdown">
+        <span class="btn drop-shadow dropdown-toggle" data-toggle="dropdown">
+          <i class="fa fa-gear" class=""></i>
+        </span>
 
-      <input id="terms" type="text" key="{{ terms }}" value="{{ terms_v }}" />
-      <input id="tilds" type="text" key="{{ tilds }}" value="{{ tilds_v }}" />
+        <ul class="dropdown-menu drop-shadow" role="menu">
+          <li class="dropdown-header">{{ user.nickname() }}</li>
+          <li><a href="#">Settings</a></li>
+          <li role="presentation" class="divider"></li>
+          {% if user.is_admin %}
+            <li><a href="/admin/">Admin Console</a></li>
+          {% endif %}
+          <li><a href="{{ user.logout_url }}">Logout</a></li>
+        </ul>
+      </span>
+    </div> -->
 
-      <span id="timestamp" key="{{ timestamp }}">{{ timestamp_v }}</span>
+    <!-- Search Box -->
+    <!-- <i id="tilds-loading" class="fa"></i> -->
 
+<!-- <div style="height: 100px">
+<span id="timestamp" style="background-color: red;" key="{{ timestamp }}">{{ timestamp_v }}</span>
+</div>
+ -->
+
+    <div id="search" class="drop-shadow">
+<!--       <span id="domain" class="dropdown">
+        <span class="btn dropdown-toggle" data-toggle="dropdown">
+          <img id="domain-logo" src="img/wikipedia.ico" /> <span class="caret"></span>
+        </span>
+
+        <ul class="dropdown-menu" role="menu">
+          <li><img src="img/wikipedia.ico" /></li>
+        </ul>
+      </span> -->
+      
+      <input id="terms" type="text" class="form-control" autocomplete="off" key="{{ terms }}" value="{{ terms_v }}" />
+
+      <span id="tilds-section">
+        <span class="tilde">~</span>
+
+        <input id="tilds" type="text" class="form-control" autocomplete="off" key="{{ tilds }}" valtemp="{{ tilds_v }}" />
+      </span>
     </div>
 
+
+
+
+
+
+
+
+
+    <!-- Page -->
+    <span id="page-loading">
+      <i class="fa fa-refresh fa-spin"></i>
+    </span>
 
     <div id="page">
       <span id="page-loading" style="hide">
@@ -101,6 +130,5 @@
         {{ content }}
       </div>
     </div>
-
   </body>
 </html>

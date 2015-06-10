@@ -1,15 +1,50 @@
-var SPEED = 100;
+var SPEED = 200;
 
-var KEY_DEL = 46;
-var KEY_BSP = 8;
-var KEY_ENT = 13;
-var KEY_TILDE_FF = 163;
-var KEY_TILDE_IE = 222;
+jQuery.fn.key = function(value) {
+    if (value == undefined) {
+        var k = $(this).attr('key');
+    
+        if (k == undefined) {
+          return '';
+        } else {
+          return k;
+        }
+    } else {
+        $(this).attr('key', value);
+    }
+};
 
 
-////////////
-// GLOBAL //
-////////////
+
+// function setKey(name, key) {
+//   if (key == undefined) {
+//     $('#' + name).attr('key', $('#' + name).val());
+//   } else {
+//     $('#' + name).attr('key', key);
+//   }
+// }
+
+
+// function setValKey(name, val, key) {
+//   if (name == 'timestamp') {
+//     $('#timestamp').text(val);
+//   } else {
+//     $('#' + name).val(val);
+//   }
+
+//   $('#' + name).attr('key', key);
+// }
+
+
+
+function url(name) {
+  switch (name) {
+    case 'page'   : return '/page/' + TERMS.key() + TILDS.key() + '?timestamp=' + TIMES.key();
+    case 'date'   : return '/temp' //'/d/' + $('#tilds').attr('key');
+    case 'search' : return '/temp' //'/s/' + $('#tilds').attr('key');
+  }
+}
+
 jQuery.fn.setLoading = function(b) {
     if (b) {
         $(this[0]).addClass('fa-refresh fa-spin');

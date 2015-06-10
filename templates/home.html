@@ -5,61 +5,32 @@
     <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
 
     <!-- Styles -->
-    <link rel="stylesheet" type="text/css" href="css/timeline/timeline.css">
-    <link rel="stylesheet" type="text/css" href="css/font-awesome/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="css/bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/timeline/timeline.css">
+    <link rel="stylesheet" type="text/css" href="../css/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap/bootstrap.min.css">
 
-    <link rel="stylesheet" type="text/css" href="css/global.css">
-    <link rel="stylesheet" type="text/css" href="css/search.css">
-    <link rel="stylesheet" type="text/css" href="css/calendar.css">
+    <link rel="stylesheet" type="text/css" href="../css/global.css">
+    <link rel="stylesheet" type="text/css" href="../css/search.css">
+    <link rel="stylesheet" type="text/css" href="../css/calendar.css">
 
     <!-- Scripts -->
-    <script type="text/javascript" src="js/jquery/jquery-1.9.1.js"></script>
-    <script type="text/javascript" src="js/jquery/jquery-ui.js"></script>
+    <script type="text/javascript" src="../js/jquery/jquery-1.9.1.js"></script>
+    <script type="text/javascript" src="../js/jquery/jquery-ui.js"></script>
 
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-    <script type="text/javascript" src="js/timeline/timeline.js"></script>
+    <script type="text/javascript" src="../js/timeline/timeline.js"></script>
 
-    <script type="text/javascript" src="js/bootstrap/bootstrap.min.js"></script>
-    <script type="text/javascript" src="js/bootstrap/bootbox.min.js"></script>
-    <script type="text/javascript" src="js/bootstrap/bootstrap.typeahead.js"></script>
+    <script type="text/javascript" src="../js/bootstrap/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../js/bootstrap/bootbox.min.js"></script>
+    <script type="text/javascript" src="../js/bootstrap/bootstrap.typeahead.js"></script>
 
-    <script type="text/javascript" src="js/global.js"></script>
-    <script type="text/javascript" src="js/search.js"></script>
-    <script type="text/javascript" src="js/calendar.js"></script>
+    <script type="text/javascript" src="../js/global.js"></script>
+    <script type="text/javascript" src="../js/search.js"></script>
+    <script type="text/javascript" src="../js/calendar.js"></script>
   </head>
 
   <body>
-    <!-- Timeline -->
-    <div id="date">
-      <span class="drop-shadow">
-        <span id="date-text">29 Nov 2014</span>
-        &nbsp;
-        <i class="fa fa-undo"></i>
-      </span>
-    </div>
-
-    <div id="timeline"></div>
-
-
-    <!-- Menu -->
-    <div id="menu">
-      <span class="dropdown">
-        <span class="btn drop-shadow dropdown-toggle" data-toggle="dropdown">
-          <i class="fa fa-gear" class=""></i>
-        </span>
-
-        <ul class="dropdown-menu drop-shadow" role="menu">
-          <li class="dropdown-header">{{ user.nickname() }}</li>
-          <li><a href="#">Settings</a></li>
-          <li role="presentation" class="divider"></li>
-          {% if user.is_admin %}
-            <li><a href="/admin/">Admin Console</a></li>
-          {% endif %}
-          <li><a href="{{ user.logout_url }}">Logout</a></li>
-        </ul>
-      </span>
-    </div>
+    
 
     <!-- Search Box -->
     <i id="tilds-loading" class="fa"></i>

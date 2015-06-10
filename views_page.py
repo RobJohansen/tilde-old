@@ -31,7 +31,7 @@ GOOGLE_URL_SEARCH   = GOOGLE_BASE + '/customsearch/v1' + \
                                         '&cx=' + GOOGLE_CSE + \
                                         '&q={terms}' + \
                                         '&siteSearch={site}' + \
-                                        '&sort=date:r:{end}:{end}'
+                                        '&sort=date:r:19000000:{end}'
 
 
 ###############
@@ -74,8 +74,9 @@ def get_response(url, context):
 
     logging.debug('REQUESTED: ' + url)
 
-    rqst = urllib2.Request(url, headers=hdr)
-    html = urllib2.urlopen(rqst)
+    # rqst = urllib2.Request(url, headers=hdr)
+
+    html = urllib.urlopen(url)
 
     return html
 
@@ -85,6 +86,10 @@ def get_response(url, context):
 ###########
 
 def search(terms, **kwargs):
+    timestamp = kwargs.get('timestamp')
+
+    logging.debug(timestamp)
+
     results = []
 
     # Find Results
@@ -94,7 +99,7 @@ def search(terms, **kwargs):
         html = get_response(GOOGLE_URL_SEARCH, {
                 'terms' : urllib.quote(terms),
                 'site'  : WIKI_BASE,
-                'end'   : kwargs.get('timestamp', '')
+                'end'   : timestamp.ljust(8, '0')
             })
 
         jsnp = json.load(html)
@@ -120,36 +125,37 @@ def search(terms, **kwargs):
             'is_match'      : urllib.unquote(terms) in [page_id, page_title]
         }
 
-        if kwargs.get('timestamp'):
-            timestamp = kwargs.get('timestamp')
+        timestamp = kwargs.get('timestamp')
+        
+        rev_id = None
 
-            rev_id = None
+        try:
+            html = get_response(WIKI_URL_HISTORY, {
+                    'page_title'    : urllib.quote(page_title),
+                    'timestamp'     : timestamp.ljust(14, '0')
+                })
 
-            try:
-                html = get_response(WIKI_URL_HISTORY, {
-                        'page_title'    : urllib.quote(page_title),
-                        'timestamp'     : timestamp.ljust(14, '0')
-                    })
+            jsnr = json.load(html)
+            jsnp = jsnr['query']['pages'].values()[0]
 
-                jsnr = json.load(html)
-                jsnp = jsnr['query']['pages'].values()[0]
-
-                rev_id = None
-
-                if jsnp.has_key('revisions'):
+            if jsnp.has_key('revisions'):
+                if timestamp:
                     rev_id = jsnp['revisions'][0]['revid']
 
-            except Exception as e:
-                logging.error('views_page.search : error = ' + str(e))
+                else:
+                    rev_id = jsnp['revisions'][0]['parentid']
 
-            result.update({
-                'is_invalid'    : not rev_id,
-                'rev_id'        : rev_id,
-                'timestamp'     : timestamp,
-                'date'          : tools.to_verbose(t=timestamp)
-            })
+        except Exception as e:
+            logging.error('views_page.search : error = ' + str(e))
 
-        if result['is_match'] and not result['is_invalid']:
+        result.update({
+            'is_invalid'    : not rev_id,
+            'rev_id'        : rev_id,
+            'timestamp'     : timestamp,
+            'date'          : tools.to_verbose(t=timestamp)
+        })
+
+        if result['is_match'] and not result.get('is_invalid'):
             return [result]
 
         else:
@@ -158,59 +164,49 @@ def search(terms, **kwargs):
     return results
 
 
-def render(timestamp=None, rev_id=None, page_id=None, **kwargs):
-    if kwargs.get('is_invalid'):
-        return tools.render_to_string('page_non_existent.html', kwargs)
+def render(rev_id, timestamp=None):
+    # if kwargs.get('is_invalid'):
+    #     return tools.render_to_string('page_non_existent.html', kwargs)
 
-    else:
-        if rev_id:
-            logging.debug('views_page.render : revision')
+    # else:
+    html = get_response(WIKI_URL_PAGE_REV, {
+            'rev_id'    : rev_id
+        })
+    
+    # MODIFY MARKUP
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html)
 
-            html = get_response(WIKI_URL_PAGE_REV, {
-                    'rev_id'    : rev_id
-                })
+    # REMOVE SUPERFLUOUS
+    soup.find(id='mw-head').decompose()
+    soup.find(id='mw-page-base').decompose()
+    soup.find(id='mw-navigation').decompose()
+
+    soup.find(id='siteSub').decompose()
+    soup.find(id='contentSub').decompose()
+    soup.find(id='firstHeading').decompose()
+    soup.find(id='footer').decompose()
+
+    soup.find(id='content')['style'] = 'margin-left: 0 !important'
+
+    # UPDATE LINKS
+    for link in soup.find(id='bodyContent')('a'):
+        if link.has_key('rel'):
+            pass
+
+        elif '#' == link['href'][0]:
+            pass
+
+        elif ':' in link['href'] and not ':_' in link['href']:
+            pass
 
         else:
-            logging.debug('views_page.render : default')
+            t = soup.new_tag('span', **{'class' : 'tilde-link'})
 
-            html = get_response(WIKI_URL_PAGE_NRM, {
-                    'page_id'   : page_id
-                })
-        
-        # MODIFY MARKUP
-        from bs4 import BeautifulSoup
-        soup = BeautifulSoup(html)
+            t.string = ('~' if timestamp else '') + link.text
+            t['terms'] = link['href'].split('/')[-1]
+            t['termsv'] = link.text
 
-        # REMOVE SUPERFLUOUS
-        soup.find(id='mw-head').decompose()
-        soup.find(id='mw-page-base').decompose()
-        soup.find(id='mw-navigation').decompose()
+            link.replaceWith(t)
 
-        soup.find(id='siteSub').decompose()
-        soup.find(id='contentSub').decompose()
-        soup.find(id='firstHeading').decompose()
-        soup.find(id='footer').decompose()
-
-        soup.find(id='content')['style'] = 'margin-left: 0 !important'
-
-        # UPDATE LINKS
-        for link in soup.find(id='bodyContent')('a'):
-            if link.has_key('rel'):
-                pass
-
-            elif '#' == link['href'][0]:
-                pass
-
-            elif ':' in link['href'] and not ':_' in link['href']:
-                pass
-
-            else:
-                t = soup.new_tag('span', **{'class' : 'tilde-link'})
-
-                t.string = ('~' if timestamp else '') + link.text
-                t['terms'] = link['href'].split('/')[-1]
-                t['termsv'] = link.text
-
-                link.replaceWith(t)
-
-        return str(soup.find(id='content'))
+    return str(soup.find(id='content'))

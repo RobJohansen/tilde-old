@@ -175,7 +175,7 @@ function tilds_key_down(e) {
             $('#tilds-section').fadeOut(SPEED, function() {
                 $('#terms').focus();
                 
-                updateTimeline(); // TODO: ***************** TENUOUS LINK
+                // updateTimeline(); // TODO: ***************** TENUOUS LINK
             });
 
         // TILDE KEY
@@ -226,7 +226,7 @@ var b_tilds = new Bloodhound({
     remote: {
         url : '/tilds',
         replace : function() {
-            return '/tilds/' + $('.tild').text();
+            return '/temp'; //'/tilds/' + $('.tild').text();
         }
     }
 });
