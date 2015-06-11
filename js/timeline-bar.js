@@ -308,15 +308,15 @@ function updateTimeline() {
         '/timeline/' + $('.tild').text(),
 
         function(ret) {
-            if (ret.success) {
+            if (ret.error) {
+                showError(ret.error);
+            } else {
                 timeline.draw(new google.visualization.DataTable(ret.data, 0.6));
 
                 // updateCompleteDate();
                 // updateUntilDate();
 
                 refreshTimeline(ret);
-            } else {
-                showError(ret.error);
             }
 
             $('#tilds-loading').setLoading(false);
@@ -329,16 +329,16 @@ function timelineEventSelected() {
     var t = $(this);
 
     $.get(
-        '/derive/' + t.attr('tag'),
+        url('derive') + t.attr('tag'),
 
         function(ret) {
-            if (ret.success) {
+            if (ret.error) {
+                showError(ret.error);
+            } else {
                 clearTilds(); // TODO: ***************** TENUOUS LINK
                 addTilds(ret.tilds);  // TODO: ***************** TENUOUS LINK
 
                 updateTimeline(); // TODO: ONLY UPDATED PARTS
-            } else {
-                showError(ret.error);
             }
         }
     );
@@ -346,36 +346,36 @@ function timelineEventSelected() {
 
 
 function timelineEventMarked() {
-    if (!$('#tilds-loading').hasClass('fa-refresh')) {
-        var t = $(this);
+    // if (!$('#tilds-loading').hasClass('fa-refresh')) {
+    //     var t = $(this);
 
-        $('#tilds-loading').setLoading(true);
+    //     $('#tilds-loading').setLoading(true);
 
-        $.post(
-            '/seen/' + t.attr('tag'),
+    //     $.post(
+    //         '/seen/' + t.attr('tag'),
 
-            function(ret) {
-                if (ret.success) {
-                    refreshTimeline(ret);
-                } else {
-                    showError(ret.error);
-                }
+    //         function(ret) {
+    //             if (ret.success) {
+    //                 refreshTimeline(ret);
+    //             } else {
+    //                 showError(ret.error);
+    //             }
 
-                $('#tilds-loading').setLoading(false);
-            }
-        );
+    //             $('#tilds-loading').setLoading(false);
+    //         }
+    //     );
 
-        var n = t.closest('.timeline-event');
+    //     var n = t.closest('.timeline-event');
 
-        if (t.isComplete()) {
-            n.processUncompletion();
-        } else {
-            n.processCompletion();
-        }
+    //     if (t.isComplete()) {
+    //         n.processUncompletion();
+    //     } else {
+    //         n.processCompletion();
+    //     }
 
-        updateCompleteDate();
-        updateUntilDate();
-    }
+    //     updateCompleteDate();
+    //     updateUntilDate();
+    // }
 }
 
 

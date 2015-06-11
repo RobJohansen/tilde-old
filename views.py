@@ -11,13 +11,11 @@ import views_page
 import urllib
 
 
+
+
 ################
-# VIEWS : HTML #
+# VIEWS : PAGE #
 ################
-
-
-
-
 def init_state(terms=None, tilds=None, timestamp=None):
     import sys
     reload(sys)
@@ -35,31 +33,6 @@ def init_state(terms=None, tilds=None, timestamp=None):
         'timestamp'     : tools.to_timestamp(date) or timestamp or '',
         'timestamp_v'   : tools.to_verbose(d=date) or tools.to_verbose(t=timestamp) or ''
     }
-
-
-class TempBloodhound(RequestHandler):
-    def get(self):
-        context = [
-            {'name' : '1'},
-            {'name' : '2'},
-            {'name' : '3'}
-        ]
-
-        tools.json_response(self, context)
-
-
-class Date(RequestHandler):
-    def get(self, tilds=None):
-        date = models.get_current_date(tilds)
-
-        context = {
-            'tilds'         : tilds,
-            'timestamp'     : tools.to_timestamp(date) or '',
-            'timestamp_v'   : tools.to_verbose(d=date) or ''
-        }
-
-        tools.json_response(self, context)
-
 
 class Render(RequestHandler):
     def get(self, rev_id):
@@ -92,27 +65,30 @@ class Page(RequestHandler):
             state = init_state(terms, tilds, timestamp)
 
             results = views_page.search(**state)
+            result = None if not len(results) == 1 else results[0]
 
-            if len(results) == 1:
-                r = results[0]
-
-                state['terms_v'] = r['page_title']
+            if result and result.get('rev_id'):
+                state['terms_v'] = result['page_title']
 
                 state_title = 'Page: '
-                state['content'] = views_page.render(r['rev_id'], timestamp),
-                state['render_url'] = uri_for('Render', rev_id=r['rev_id'], timestamp=timestamp or '')
+                state['content'] = views_page.render(result['rev_id'], timestamp),
+                state['render_url'] = uri_for('Render', rev_id=result['rev_id'], timestamp=timestamp or '')
+
+            elif result:
+                state_title = 'Page Missing: '
+                state['content'] = tools.render_to_string('page_non_existent.html', dict({'result' : result}, **state))
 
             elif terms:
                 state_title = 'Results: '
                 state['content'] = tools.render_to_string('page_results.html', dict({'results' : results}, **state))
 
             else:
-                state_title = ''
+                state_title = 'Home'
                 state['content'] = tools.render_to_string('page_empty.html')
 
             context.update({
                 'state'         : state,
-                'state_title'   : state_title + str(state['terms_v']) + str(state['tilds_v']),
+                'state_title'   : 'Tilde - ' + state_title + str(state['terms_v']) + str(state['tilds_v']),
                 'state_url'     : uri_for('Base', terms=state['terms_v'] or '', tilds=state['tilds_v'])
             })
 
@@ -127,6 +103,14 @@ class Page(RequestHandler):
                 tools.json_response(self, context)
 
 
+
+
+#####################
+# VIEWS : TEMPLATES #
+#####################
+
+
+
 class Base(RequestHandler):
     def get(self, terms=None, tilds=None):
         state = init_state(terms, tilds)
@@ -134,64 +118,98 @@ class Base(RequestHandler):
         tools.render_with_context(self, 'page_base.html', state)
 
 
-
-
-
-
-
-
-
-
-
-#####################
-# VIEWS : TEMPLATES #
-#####################
-# class Home(RequestHandler):
+# class User(RequestHandler):
 #     def get(self):
 #         context = {
-        
+
 #         }
 
-#         tools.render_with_context(self, 'home.html', context)
+#         tools.render_with_context(self, 'user.html', context)
 
 
-class User(RequestHandler):
-    def get(self):
-        context = {
+# class AdminConsole(RequestHandler):
+#     def get(self):
+#         context = {
 
-        }
+#         }
 
-        tools.render_with_context(self, 'user.html', context)
-
-
-class AdminConsole(RequestHandler):
-    def get(self):
-        context = {
-
-        }
-
-        tools.render_with_context(self, 'admin.html', context)
+#         tools.render_with_context(self, 'admin.html', context)
 
 
 
-######################
-# VIEWS : BLOODHOUND #
-######################
-class Tilds(RequestHandler):
-    def get(self, tilds):
-        context = models.get_next_tilds(tilds)
 
-        tools.json_response(self, context)
-            
+
+
 
 
 
 ################
 # VIEWS : JSON #
 ################
+
+
+
+class GetTerms(RequestHandler):
+    def get_json(self, terms):
+        terms_list = views_page.pages(terms)
+
+        context = map(lambda (t, _): {'name' : t}, terms_list)
+
+        tools.json_response(self, context)
+
+
+class GetTilds(RequestHandler):
+    def get_json(self, tilds):
+        tilds_list = models.get_next_tilds(tilds)
+
+        context = map(lambda t: {'name' : t.verbose()}, tilds_list)
+
+        tools.json_response(self, context)
+
+
+class Date(RequestHandler):
+    def get_json(self, tilds):
+        context = { }
+
+        try:
+            date = models.get_current_date(tilds)
+
+            context = {
+                'tilds'         : tilds,
+                'timestamp'     : tools.to_timestamp(date) or '',
+                'timestamp_v'   : tools.to_verbose(d=date) or ''
+            }
+
+        except Exception as e:
+            context['error'] = str(e)
+
+        finally:
+            tools.json_response(self, context)
+
+
+class Derive(RequestHandler):
+    def get_json(self, id):
+        context = { }
+
+        try:
+            tilds_list = models.derive_tilds(id)
+
+            context['tilds'] = tilds_list
+
+        except Exception as e:
+            context['error'] = str(e)
+
+        finally:
+            tools.json_response(self, context)
+            
+
+
+
+
+
 class Timeline(RequestHandler):
-    def get(self, tilds):
-        context = { 'success' : True }
+    def get_json(self, tilds):
+        context = { }
 
         try:
             n = models.get_current_tild(tilds)
@@ -242,67 +260,48 @@ class Timeline(RequestHandler):
             context['data'] = table.ToJSon()
 
         except Exception as e:
-            context['success'] = False
             context['error'] = str(e)
 
         finally:
             tools.json_response(self, context)
 
 
-class Derive(RequestHandler):
-    def get(self, id):
-        context = { 'success' : True }
 
-        try:
-            tilds = models.derive_tilds(id)
+# class SeenTag(RequestHandler):
+#     def post(self, id):
+#         context = { }
 
-            context['tilds'] = tilds
+#         try:
+#             n = models.Tilde.get_by_id(id) or models.Tilde.get_by_id(long(id))
 
-        except Exception as e:
-            context['success'] = False
-            context['error'] = str(e)
+#             if n.is_complete:
+#                 n.process_uncompletion()
 
-        finally:
-            tools.json_response(self, context)
+#             else:
+#                 n.process_completion()
 
+#         except Exception as e:
+#             context['error'] = str(e)
 
-class SeenTag(RequestHandler):
-    def post(self, id):
-        context = { 'success' : True }
-
-        try:
-            n = models.Tilde.get_by_id(id) or models.Tilde.get_by_id(long(id))
-
-            if n.is_complete:
-                n.process_uncompletion()
-
-            else:
-                n.process_completion()
-
-        except Exception as e:
-            context['success'] = False
-            context['error'] = str(e)
-
-        finally:
-            tools.json_response(self, context)
+#         finally:
+#             tools.json_response(self, context)
 
 
-class SeenTime(RequestHandler):
-    def post(self, year, month, day, id):
-        context = { 'success' : True }
+# class SeenTime(RequestHandler):
+#     def post(self, year, month, day, id):
+#         context = { }
 
-        try:
-            id = id.split('~')[1]
-            n = models.Tilde.get_by_id(id) or models.Tilde.get_by_id(long(id))
+#         try:
+#             id = id.split('~')[1]
+#             n = models.Tilde.get_by_id(id) or models.Tilde.get_by_id(long(id))
 
-            n.process_check(datetime(long(year), long(month), long(day)))
+#             n.process_check(datetime(long(year), long(month), long(day)))
 
-        except Exception as e:
-            context['success'] = False
-            context['error'] = str(e)
+#         except Exception as e:
+#             context['error'] = str(e)
 
-        finally:
-            tools.json_response(self, context)
+#         finally:
+#             tools.json_response(self, context)
 
 
 

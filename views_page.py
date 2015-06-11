@@ -85,14 +85,9 @@ def get_response(url, context):
 # ENTRIES #
 ###########
 
-def search(terms, **kwargs):
+def pages(terms, **kwargs):
     timestamp = kwargs.get('timestamp')
 
-    logging.debug(timestamp)
-
-    results = []
-
-    # Find Results
     pages = []
 
     if USE_GOOGLE_SEARCH:
@@ -116,9 +111,14 @@ def search(terms, **kwargs):
 
         pages = zip(jsnp[1], map(lambda p: p.split('/')[-1:][0], jsnp[3]))
 
+    return pages
+
+
+def search(terms, **kwargs):
+    results = []
 
     # Check Result Existence
-    for (page_title, page_id) in pages:
+    for (page_title, page_id) in pages(terms, **kwargs):
         result = {
             'page_id'       : page_id,
             'page_title'    : page_title,

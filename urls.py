@@ -2,34 +2,29 @@ from webapp2 import WSGIApplication, Route
 import views
 
 urls = [
-
-
     Route(
-        r'/t/<tilds:([^/]+)?>',
-        handler='views.Tilds'
+        r'/get_terms/<terms:([^/]+)?>',
+        handler='views.GetTerms:get_json'
     ),
 
     Route(
-        r'/get_next_tilds/<id:([^/]+)?>',
-        handler='views.Derive'
+        r'/get_tilds/<tilds:([^/]+)?>',
+        handler='views.GetTilds:get_json'
     ),
 
     Route(
-        r'/d/<tilds:([^/]+)?>',
-        handler='views.Date'
+        r'/date/<tilds:([^/]+)?>',
+        handler='views.Date:get_json'
     ),
-
-
 
     Route(
-        r'/s/<terms:([^/^~]+)?>',
-        handler='views.Search'
+        r'/derive/<id:([^/]+)?>',
+        handler='views.Derive:get_json'
     ),
-
 
     Route(
         r'/timeline/<tilds:([^/]+)?>',
-        handler='views.Timeline'
+        handler='views.Timeline:get_json'
     ),
 
 
@@ -94,11 +89,11 @@ urls = [
 ]
 
 urls_admin = [
-    Route(
-        r'/admin/',
-        handler=views.AdminConsole,
-        name='AdminConsole'
-    ),
+    # Route(
+    #     r'/admin/',
+    #     handler=views.AdminConsole,
+    #     name='AdminConsole'
+    # ),
 
     Route(
         r'/admin/push/<id:([^/]+)?>/<title:([^/]+)?>',

@@ -37,13 +37,16 @@ jQuery.fn.key = function(value) {
 
 
 
-function url(name) {
-  switch (name) {
-    case 'page'   : return '/page/' + TERMS.key() + TILDS.key() + '?timestamp=' + TIMES.key();
-    case 'date'   : return '/temp' //'/d/' + $('#tilds').attr('key');
-    case 'search' : return '/temp' //'/s/' + $('#tilds').attr('key');
+function url(key) {
+  switch (key) {
+    case 'page'     : return '/page/' + TERMS.key() + TILDS.key() + '?timestamp=' + TIMES.key();
+    case 'bh_terms' : return '/get_terms/' + TERMS.val();
+    case 'bh_tilds' : return '/get_tilds/' + TILDS.key();
+    case 'date'     : return '/date/' + TILDS.key();
+    case 'derive'   : return '/derive/';
   }
 }
+
 
 jQuery.fn.setLoading = function(b) {
     if (b) {

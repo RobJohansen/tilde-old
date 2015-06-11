@@ -56,7 +56,21 @@ def get_next_tilds(tilds):
     else:
         results = Tilde.query(Tilde.label != None).order(Tilde.label)
 
-    return map(lambda x: {'name' : x.verbose() }, results.order(Tilde.tag))
+    return results.order(Tilde.tag)
+
+
+def derive_tilds(id):
+    m = Tilde.get_by_id(id) or Tilde.get_by_id(long(id))
+
+    tilds = [m]
+
+    while m.ancestor:
+        m = m.ancestor.get()
+        tilds.append(m)
+
+    tilds = map(lambda x: x.verbose(), tilds)
+
+    return tilds[::-1]
 
 
 
@@ -82,22 +96,6 @@ def until_date(n):
 
 
 
-
-
-
-
-def derive_tilds(id):
-    m = Tilde.get_by_id(id) or Tilde.get_by_id(long(id))
-
-    tilds = [m]
-
-    while m.ancestor:
-        m = m.ancestor.get()
-        tilds.append(m)
-
-    tilds = map(lambda x: x.verbose(), tilds)
-
-    return tilds[::-1]
 
 
 

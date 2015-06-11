@@ -180,7 +180,7 @@ function tilds_key_down(e) {
 
                     syncState();
 
-                    // updateTimeline(); // TODO: ***************** TENUOUS LINK
+                    updateTimeline(); // TODO: ***************** TENUOUS LINK
                 });
             }
         );
@@ -193,30 +193,30 @@ function tilds_key_down(e) {
 ///////////////
 // TYPEAHEAD //
 ///////////////
-var b_options = {
+var bh_options = {
     hint:         true,
     highlight:    true,
     minLength:    1
 };
 
-var b_terms = new Bloodhound({
+var bh_terms = new Bloodhound({
     datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
     queryTokenizer: Bloodhound.tokenizers.whitespace,
     remote: {
-        url : url('search'),
+        url : '/get_terms',
         replace : function() {
-            return url('search');
+            return url('bh_terms');
         }
     }
 });
 
-var b_tilds = new Bloodhound({
+var bh_tilds = new Bloodhound({
     datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
     queryTokenizer: Bloodhound.tokenizers.whitespace,
     remote: {
-        url : url('date'),
+        url : '/get_tilds',
         replace : function() {
-            return url('date');
+            return url('bh_tilds');
         }
     }
 });
@@ -230,19 +230,20 @@ function init_search_box() {
     TILDS = $('#tilds');
     TIMES = $('#timestamp');
 
-    b_terms.initialize();
-    b_tilds.initialize();
 
-    TERMS.typeahead(b_options, {
+    bh_terms.initialize();
+    bh_tilds.initialize();
+
+    TERMS.typeahead(bh_options, {
         name        : 'terms',
         displayKey  : 'name',
-        source      : b_terms.ttAdapter()
+        source      : bh_terms.ttAdapter()
     });
 
-    TILDS.typeahead(b_options, {
+    TILDS.typeahead(bh_options, {
         name        : 'tilds',
         displayKey  : 'name',
-        source      : b_tilds.ttAdapter()
+        source      : bh_tilds.ttAdapter()
     });
 
     TERMS.keydown(terms_key_down);
@@ -253,6 +254,9 @@ function init_search_box() {
     TILDS.keydown(tilds_key_down);
     // TILDS.on('typeahead:opened', typeaheadOpened);
     // TILDS.on('typeahead:closed', typeaheadClosed);
+
+
+
 
     $('#tilds-section').hide();
 
